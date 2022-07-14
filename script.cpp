@@ -9,7 +9,7 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-static std::map <std::string, class LuaScript *> _Scripts;
+static std::map <std::string, class LuaScript *> Scripts;
 
 static bool ScanForNewScripts(void) {
 	LOG(INFO) << "Searching for scripts...";
@@ -19,11 +19,10 @@ static bool ScanForNewScripts(void) {
 
 	do {
 		if(!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			if(!_Scripts[FindData.cFileName]) {
+			if(!Scripts[FindData.cFileName]) {
 				class LuaScript *script = new LuaScript(FindData.cFileName);
-				LOG(INFO) << "Created " << FindData.cFileName << " object";
 				std::string error;
-				_Scripts[FindData.cFileName] = script;
+				Scripts[FindData.cFileName] = script;
 
 				if(script->Load(error))
 					LOG(INFO) << "Script " << FindData.cFileName << " loaded";
@@ -119,8 +118,8 @@ class MenuItemStatus : public MenuItemDefault {
 	virtual std::string GetCaption(void) {
 		LuaScript *scr = ((MenuScript *)GetMenu())->GetScript();
 		return MenuItemDefault::GetCaption() +
-		std::string(scr->loaded ? "loaded," : "not loaded,") +
-		std::string(scr->haserror ? " with errors" : " no errors");
+		std::string(scr->IsLoaded() ? "loaded," : "not loaded,") +
+		std::string(scr->HasError() ? " with errors" : " no errors");
 	}
 
 public:
@@ -166,9 +165,9 @@ public:
 class MenuItemUnload : public MenuItemDefault {
 	virtual void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
-		for(std::map<std::string, LuaScript *>::iterator it = _Scripts.begin(); it != _Scripts.end();) {
+		for(std::map<std::string, LuaScript *>::iterator it = Scripts.begin(); it != Scripts.end();) {
 			if(it->second == script) {
-				it = _Scripts.erase(it);
+				it = Scripts.erase(it);
 			} else {
 				it++;
 			}
@@ -209,8 +208,8 @@ static MenuScripts *CreateScriptsList(MenuController *controller) {
 	auto menu = new MenuScripts(new MenuItemTitle("Scripts list"));
 	controller->RegisterMenu(menu);
 
-	if(_Scripts.size() > 0) {
-		for(auto const& x : _Scripts)
+	if(Scripts.size() > 0) {
+		for(auto const& x : Scripts)
 			menu->AddItem(new MenuItemScript(x.first, x.second));
 	} else
 		menu->AddItem(new MenuItemDefault("No scripts found"));
@@ -281,6 +280,8 @@ void main(void) {
 			menuController->PushMenu(mainMenu);
 		}
 		menuController->Update();
+		for(auto &s : Scripts)
+			s.second->OnTick();
 		WAIT(0);
 	}
 }
@@ -291,9 +292,9 @@ void ScriptMain(void) {
 }
 
 void ScriptFinish(void) {
-	for(auto const & x : _Scripts)
+	for(auto const & x : Scripts)
 		delete x.second;
 	
-	_Scripts.clear();
+	Scripts.clear();
 	LOG(INFO) << "RedLua stopped";
 }

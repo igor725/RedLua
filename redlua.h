@@ -54,9 +54,9 @@ class LuaScript {
 	private:
 		lua_State *L;
 		std::string path;
+		bool loaded, haserror;
 
 	public:
-		bool loaded, haserror;
 		LuaScript(std::string luafile) {
 			L = luaL_newstate();
 			luaL_openlibs(L);
@@ -80,8 +80,11 @@ class LuaScript {
 		}
 
 		~LuaScript() {
-			LookupFunc("OnStop");
-			CallFunc(0, 0);
+			lua_getglobal(L, "OnStop");
+			if(!lua_isfunction(L, -1))
+				lua_pop(L, 1);
+			else
+				lua_pcall(L, 0, 0, 0);
 			lua_close(L);
 		}
 
@@ -96,29 +99,23 @@ class LuaScript {
 			return false;
 		}
 
-		virtual bool LookupFunc(std::string name) {
-			lua_getglobal(L, name.c_str());
-			if(!lua_isfunction(L, -1)) {
+		virtual void OnTick() {
+			lua_getglobal(L, "OnTick");
+			if(!lua_isfunction(L, -1))
 				lua_pop(L, 1);
-				return false;
-			}
-			
-			return true;
-		}
-
-		virtual bool CallFunc(int nargs, int nres) {
-			return lua_pcall(L, nargs, nres, 0) == 0;
+			else
+				lua_pcall(L, 0, 0, 0);
 		}
 
 		virtual float GetMemoryUsage(void) {
 			return lua_gc(L, LUA_GCCOUNTB, 0) / 1024.0f;
 		}
 
-		virtual lua_State *GetState(void) {
-			return L;
-		}
-
 		virtual bool IsLoaded(void) {
 			return loaded;
+		}
+
+		virtual bool HasError(void) {
+			return haserror;
 		}
 };
