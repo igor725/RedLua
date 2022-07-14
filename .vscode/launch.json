@@ -1,0 +1,10 @@
+{
+	"configurations": [
+		{
+			"name": "Attach game process",
+			"type": "cppvsdbg",
+			"request": "attach",
+			"processId": "${command:pickProcess}"	
+		}
+	]
+}
