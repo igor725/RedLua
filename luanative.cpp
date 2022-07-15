@@ -81,6 +81,7 @@ static NativeType get_type(std::string& name) {
 }
 
 std::map<NativeType, std::map<int, int>> native_cache {};
+std::map<lua_State *, int> ref_map {};
 
 static int from_cache(NativeType type, int id) {
 	if(native_cache.find(type) == native_cache.end())
@@ -242,36 +243,50 @@ static int push_value(lua_State *L, NativeType type, PUINT64 val) {
 	return 1;
 }
 
+static NativeMeth *native_search(std::string nspace, std::string meth) {
+	if(Natives.find(nspace) == Natives.end())
+		return nullptr;
+	if(Natives[nspace].find(meth) == Natives[nspace].end())
+		return nullptr;
+
+	return &Natives[nspace][meth];
+}
+
+static int native_prepare(lua_State *L, NativeMeth *meth, int nargs, int skip) {
+	int exargs = meth->params.size();
+	if(exargs < 1 && nargs > skip)
+		luaL_error(L, "This function does not accepts arguments");
+	else if(exargs > (nargs - skip)) {
+		luaL_error(L, "bad argument #%d (%s expected, got no value)",
+			nargs + 1, get_type_info(meth->params[nargs - skip].type).name);
+	}
+
+	return exargs;
+}
+
+static void native_mid(lua_State *L, NativeMeth *meth, int exargs) {
+	nativeInit(meth->hash);
+	for(int i = 0; i < exargs; i++) {
+		UINT64 value;
+		get_value(L, i + 3, meth->params[i].type, &value);
+		nativePush(value);
+	}
+}
+
 static int native_call(lua_State *L) {
 	if(Natives.size() == 0)
 		luaL_error(L, "Natives database is empty or was loaded incorrectly");
-	int nargs = lua_gettop(L);
-	std::string nspace = luaL_checkstring(L, 1);
-	std::string meth = luaL_checkstring(L, 2);
-	if(Natives.find(nspace) == Natives.end())
-		luaL_error(L, "Unknown namespace");
-	if(Natives[nspace].find(meth) == Natives[nspace].end())
-		luaL_error(L, "Unknown method");
+	NativeMeth *_meth = native_search(
+		luaL_checkstring(L, 1),
+		luaL_checkstring(L, 2)
+	);
+	if(_meth == nullptr)
+		luaL_error(L, "Method not found");
+	
+	int exargs = native_prepare(L, _meth, lua_gettop(L), 2);
+	native_mid(L, _meth, exargs);
 
-	NativeMeth &_meth = Natives[nspace][meth];
-	NativeParams &_params = _meth.params;	
-
-	int exargs = _params.size();
-	if(exargs < 1 && nargs > 2)
-		luaL_error(L, "This function does not accepts arguments");
-	else if(exargs > (nargs - 2)) {
-		luaL_error(L, "bad argument #%d (%s expected, got no value)",
-			nargs + 1, get_type_info(_params[nargs - 2].type).name);
-	}
-
-	nativeInit(_meth.hash);
-	for(int i = 0; i < exargs; i++) {
-		UINT64 value;
-		get_value(L, i + 3, _params[i].type, &value);
-		nativePush(value);
-	}
-
-	return push_value(L, _meth.ret, nativeCall());
+	return push_value(L, _meth->ret, nativeCall());
 }
 
 static int native_calla(lua_State *L) {
@@ -385,10 +400,63 @@ static const luaL_Reg nativeobj[] = {
 	{NULL, NULL}
 };
 
+static int generic_newindex(lua_State *L) {
+	luaL_error(L, "Attempt to modify readonly object");
+	return 0;
+}
+
+static int meth_call(lua_State *L) {
+	int nargs = lua_gettop(L);
+	lua_rawgeti(L, 1, 1);
+	lua_rawgeti(L, 2, 2);
+	NativeMeth *_meth = native_search(lua_tostring(L, -1), lua_tostring(L, -2));
+	if(!_meth) luaL_error(L, "Method not found");
+	int exargs = native_prepare(L, _meth, nargs, 2);
+	native_mid(L, _meth, exargs);
+	return push_value(L, _meth->ret, nativeCall());
+}
+
+static const luaL_Reg methmeta[] = {
+	{"__newindex", generic_newindex},
+	{"__call", meth_call},
+
+	{NULL, NULL}
+};
+
+static int nspace_index(lua_State *L) {
+	luaL_checktype(L, 2, LUA_TSTRING);
+	lua_rawgeti(L, 1, 1);
+	lua_pushvalue(L, 2);
+	lua_rawseti(L, -2, 1);
+	return 1;
+}
+
+static const luaL_Reg nspacemeta[] = {
+	{"__newindex", generic_newindex},
+	{"__index", nspace_index},
+
+	{NULL, NULL}
+};
+
+static int global_index(lua_State *L) {
+	lua_pushvalue(L, 2);
+	lua_rawget(L, LUA_GLOBALSINDEX);
+	if(lua_isnil(L, -1) && lua_type(L, 2) == LUA_TSTRING) {
+		lua_pop(L, 1);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, ref_map[L]);
+		lua_pushvalue(L, 2);
+		lua_rawseti(L, -2, 2);
+	}
+
+	return 1;
+}
+
 int luaopen_native(lua_State *L) {
-	NativeReturn nret;
-	if((nret = native_reload()) != NLOAD_OK)
-		LOG(ERROR) << "Failed to load native.json: " << nret;
+	if(Natives.size() == 0) {
+		NativeReturn nret;
+		if((nret = native_reload()) != NLOAD_OK)
+			LOG(ERROR) << "Failed to load native.json: " << nret;
+	}
 
 	luaL_newmetatable(L, "NativeObject");
 	lua_pushstring(L, "none of your business");
@@ -397,11 +465,31 @@ int luaopen_native(lua_State *L) {
 	lua_pop(L, 1);
 
 	lua_createtable(L, 0, 0);
-	lua_createtable(L, 0, 0);
+	lua_createtable(L, 0, 1);
 	lua_pushstring(L, "v");
 	lua_setfield(L, -2, "__mode");
 	lua_setmetatable(L, -2);
 	lua_setfield(L, LUA_REGISTRYINDEX, "_NATIVECACHE");
+
+	lua_createtable(L, 1, 0);
+	lua_createtable(L, 1, 0);
+	lua_createtable(L, 0, 3);
+	lua_pushstring(L, "method");
+	lua_setfield(L, -2, "__metatable");
+	luaL_setfuncs(L, methmeta, 0);
+	lua_setmetatable(L, -2);
+	lua_rawseti(L, -2, 1);
+	lua_createtable(L, 0, 3);
+	lua_pushstring(L, "namespace");
+	lua_setfield(L, -2, "__metatable");
+	luaL_setfuncs(L, nspacemeta, 0);
+	lua_setmetatable(L, -2);
+	ref_map[L] = luaL_ref(L, LUA_REGISTRYINDEX);
+
+	lua_createtable(L, 0, 1);
+	lua_pushcfunction(L, global_index);
+	lua_setfield(L, -2, "__index");
+	lua_setmetatable(L, LUA_GLOBALSINDEX);
 
 	luaL_newlib(L, nativelib);
 	return 1;

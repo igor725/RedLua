@@ -55,21 +55,17 @@ class LuaScript {
 		lua_State *L;
 		std::string path;
 		bool loaded, haserror;
+		int modref = LUA_REFNIL;
 
 	public:
 		LuaScript(std::string luafile) {
 			L = luaL_newstate();
 			luaL_openlibs(L);
 			for(const luaL_Reg *lib = redlibs; lib->name; lib++) {
-#				if LUA_VERSION_NUM < 502
-					lua_pushcfunction(L, lib->func);
-					lua_pushstring(L, lib->name);
-					lua_call(L, 1, 1);
-					lua_setglobal(L, lib->name);
-#				else
-					luaL_requiref(L, lib->name, lib->func, 1);
-					lua_pop(L, 1);
-#				endif
+				lua_pushcfunction(L, lib->func);
+				lua_pushstring(L, lib->name);
+				lua_call(L, 1, 1);
+				lua_setglobal(L, lib->name);
 			}
 
 			lua_pushcfunction(L, log_print);
@@ -80,16 +76,16 @@ class LuaScript {
 		}
 
 		~LuaScript() {
-			lua_getglobal(L, "OnStop");
-			if(!lua_isfunction(L, -1))
-				lua_pop(L, 1);
-			else
+			if(LookForFunc("OnStop"))
 				lua_pcall(L, 0, 0, 0);
+
 			lua_close(L);
 		}
 
 		virtual bool Load(std::string& error) {
-			if(luaL_dofile(L, path.c_str()) == 0) {
+			if(modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, modref);
+			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
+				modref = luaL_ref(L, LUA_REGISTRYINDEX);
 				loaded = true, haserror = false;
 				return true;
 			}
@@ -99,11 +95,24 @@ class LuaScript {
 			return false;
 		}
 
+		virtual bool LookForFunc(const char *name) {
+			if(modref != -1) {
+				lua_rawgeti(L, LUA_REGISTRYINDEX, modref);
+				lua_getfield(L, -1, name);
+				if(!lua_isfunction(L, -1)) {
+					lua_pop(L, 2);
+					return false;
+				}
+
+				lua_remove(L, -2);
+				return true;
+			}
+
+			return false;
+		}
+
 		virtual void OnTick() {
-			lua_getglobal(L, "OnTick");
-			if(!lua_isfunction(L, -1))
-				lua_pop(L, 1);
-			else
+			if(LookForFunc("OnTick"))
 				lua_pcall(L, 0, 0, 0);
 		}
 
