@@ -1,4 +1,5 @@
 #pragma once
+
 #include "luajit\src\lua.hpp"
 
 typedef int NativeType;

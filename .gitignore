@@ -1,4 +1,4 @@
 .vscode/settings.json
-ScriptHook
-luajit
-objs
+src/thirdparty/ScriptHook/
+src/thirdparty/LuaJIT/
+objs/

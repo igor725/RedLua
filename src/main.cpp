@@ -2,8 +2,9 @@
 #include "keyboard.h"
 #include "easyloggingpp.h"
 
-#define EnsureDirectory(D) (!CreateDirectory(D, NULL) ? ERROR_ALREADY_EXISTS == GetLastError() : true)
+INITIALIZE_EASYLOGGINGPP
 el::Configurations conf("RedLua\\log.conf");
+#define EnsureDirectory(D) (!CreateDirectory(D, NULL) ? ERROR_ALREADY_EXISTS == GetLastError() : true)
 BOOL hasConsole = false;
 
 BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {

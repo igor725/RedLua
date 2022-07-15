@@ -3,11 +3,9 @@
 #include "redlua.h"
 #include "luanative.h"
 #include "easyloggingpp.h"
-#include <map>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-
-INITIALIZE_EASYLOGGINGPP
+#include <map>
 
 static std::map <std::string, class LuaScript *> Scripts;
 

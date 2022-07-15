@@ -1,4 +1,3 @@
-#include "script.h"
 #include "redlua.h"
 #include "keyboard.h"
 
