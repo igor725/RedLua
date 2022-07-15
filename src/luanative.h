@@ -1,6 +1,6 @@
 #pragma once
 
-#include "luajit\src\lua.hpp"
+#include "thirdparty\luajit\src\lua.hpp"
 
 typedef int NativeType;
 

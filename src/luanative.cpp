@@ -2,10 +2,10 @@
 #include <string>
 #include <fstream>
 #include <stdlib.h>
-#include "easyloggingpp.h"
-#include "ScriptHook\inc\nativeCaller.h"
-#include "ScriptHook\inc\types.h"
-#include "json.hpp"
+#include "thirdparty\easyloggingpp.h"
+#include "thirdparty\ScriptHook\inc\nativeCaller.h"
+#include "thirdparty\ScriptHook\inc\types.h"
+#include "thirdparty\json.hpp"
 #include "luanative.h"
 
 using json = nlohmann::json;

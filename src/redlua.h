@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include "luajit\src\lua.hpp"
-#include "easyloggingpp.h"
+#include "thirdparty\luajit\src\lua.hpp"
+#include "thirdparty\easyloggingpp.h"
+
 extern const luaL_Reg redlibs[];
 
 static int log_print(lua_State *L) {
@@ -54,7 +55,7 @@ class LuaScript {
 	private:
 		lua_State *L;
 		std::string path;
-		bool loaded, haserror;
+		bool enabled, haserror;
 		int modref = LUA_REFNIL;
 
 	public:
@@ -72,12 +73,12 @@ class LuaScript {
 			lua_setglobal(L, "print");
 
 			path = "RedLua\\Scripts\\" + luafile;
-			loaded = false, haserror = false;
+			enabled = false, haserror = false;
 		}
 
 		~LuaScript() {
 			if(LookForFunc("OnStop"))
-				lua_pcall(L, 0, 0, 0);
+				CallFunc(0, 0);
 
 			lua_close(L);
 		}
@@ -86,17 +87,17 @@ class LuaScript {
 			if(modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, modref);
 			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
 				modref = luaL_ref(L, LUA_REGISTRYINDEX);
-				loaded = true, haserror = false;
+				enabled = true, haserror = false;
 				return true;
 			}
 
-			loaded = false, haserror = true;
+			enabled = false, haserror = true;
 			error = lua_tostring(L, -1);
 			return false;
 		}
 
 		virtual bool LookForFunc(const char *name) {
-			if(modref != -1) {
+			if(enabled && modref != -1) {
 				lua_rawgeti(L, LUA_REGISTRYINDEX, modref);
 				lua_getfield(L, -1, name);
 				if(!lua_isfunction(L, -1)) {
@@ -111,17 +112,34 @@ class LuaScript {
 			return false;
 		}
 
+		virtual bool CallFunc(int argn, int retn, bool stop_on_error = true) {
+			if(lua_pcall(L, argn, retn, -1) != 0) {
+				if(stop_on_error) enabled = false, haserror = true;
+				LOG(ERROR) << "Lua error occured (" << path << "): " << lua_tostring(L, -1);
+				lua_pop(L, 1);
+				lua_gc(L, LUA_GCCOLLECT, 0);
+				return false;
+			}
+
+			return true;
+		}
+
 		virtual void OnTick() {
 			if(LookForFunc("OnTick"))
-				lua_pcall(L, 0, 0, 0);
+				CallFunc(0, 0);
 		}
 
 		virtual float GetMemoryUsage(void) {
 			return lua_gc(L, LUA_GCCOUNTB, 0) / 1024.0f;
 		}
 
-		virtual bool IsLoaded(void) {
-			return loaded;
+		virtual void SetEnabled(bool en) {
+			lua_gc(L, LUA_GCCOLLECT, 0);
+			enabled = en;
+		}
+
+		virtual bool IsEnabled(void) {
+			return enabled;
 		}
 
 		virtual bool HasError(void) {

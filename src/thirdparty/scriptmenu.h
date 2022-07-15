@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "script.h"
+#include "base.h"
 #include "keyboard.h"
 
 #include <windows.h>

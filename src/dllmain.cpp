@@ -1,6 +1,6 @@
-#include "script.h"
-#include "keyboard.h"
-#include "easyloggingpp.h"
+#include "base.h"
+#include "thirdparty\keyboard.h"
+#include "thirdparty\easyloggingpp.h"
 
 INITIALIZE_EASYLOGGINGPP
 el::Configurations conf("RedLua\\log.conf");
@@ -10,6 +10,11 @@ BOOL hasConsole = false;
 BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 	switch(reason) {
 		case DLL_PROCESS_ATTACH:
+			if(!EnsureDirectory("RedLua")
+			|| !EnsureDirectory("RedLua\\Scripts")
+			|| !EnsureDirectory("RedLua\\Logs"))
+				break;
+
 			el::Loggers::reconfigureLogger("default", conf);
 			if(el::Loggers::getLogger("default")->typedConfigurations()->toStandardOutput(el::Level::Global)) {
 				if(AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
@@ -19,10 +24,6 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 				}
 			}
 			LOG(INFO) << "Logger initialized";
-
-			if(!EnsureDirectory("RedLua")
-			|| !EnsureDirectory("RedLua\\Scripts"))
-				break;
 
 			scriptRegister(hInstance, ScriptMain);
 			keyboardHandlerRegister(OnKeyboardMessage);
