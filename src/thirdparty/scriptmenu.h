@@ -20,7 +20,7 @@ class MenuController;
 
 struct ColorRgba
 {
-	byte	r, g, b, a;
+	UCHAR	r, g, b, a;
 };
 
 enum eMenuItemClass
@@ -83,7 +83,7 @@ const float
 
 const ColorRgba
 	MenuItemTitle_colorRect { 0, 0, 0, 255 },
-	MenuItemTitle_colorText { 255, 255, 255, 255 };
+	MenuItemTitle_colorText { 187, 50, 50, 200 };
 
 class MenuItemTitle : public MenuItemBase
 {
@@ -118,9 +118,9 @@ const float
 	MenuItemDefault_textLeft	= 0.01f;
 
 const ColorRgba
-	MenuItemDefault_colorRect			{ 70, 95, 95, 150 },
+	MenuItemDefault_colorRect			{ 70, 70, 70, 150 },
 	MenuItemDefault_colorText			{ 255, 255, 255, 150 },
-	MenuItemDefault_colorRectActive		{ 218, 242, 216, 200 },
+	MenuItemDefault_colorRectActive		{ 120, 95, 95, 200 },
 	MenuItemDefault_colorTextActive		{ 0, 0, 0, 200 };
 
 class MenuItemDefault : public MenuItemBase
@@ -278,13 +278,8 @@ public:
 	bool HasActiveMenu()			{	return m_menuStack.size() > 0; }
 	void PushMenu(MenuBase *menu)	{	if (IsMenuRegistered(menu)) m_menuStack.push_back(menu); }
 	void PopMenu()					{   if (m_menuStack.size()) { m_menuStack.back()->OnPop(); m_menuStack.pop_back(); } }
-	void PopMenu(size_t count)      {   for(size_t i = 0; i < count; i++) PopMenu(); }
+	void PopMenu(size_t count)      {   if(count == 0) count = m_menuStack.size(); for(size_t i = 0; i < count; i++) PopMenu(); }
 	void SetStatusText(string text, int ms) { m_statusText = text, m_statusTextMaxTicks = GetTickCount() + ms; }
-	void CloseAttempt()
-	{
-		size_t pops = m_menuStack.size() > 1 ? m_menuStack.size() - 1 : 1;
-		for(size_t i = 0; i < pops; i++) PopMenu();
-	}
 	bool IsMenuRegistered(MenuBase *menu)
 	{
 		for (size_t i = 0; i < m_menuList.size(); i++)

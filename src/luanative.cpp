@@ -155,7 +155,7 @@ static void get_value(lua_State *L, int idx, NativeType extype, PUINT64 val) {
 		switch(lua_type(L, idx)) {
 			case LUA_TNUMBER: // Немного костыльно определяем, че передаём, целое число или же плавающее
 				temp = (float)lua_tonumber(L, idx);
-				extype = temp == (NativeType)temp ? NTYPE_INT : NTYPE_FLOAT;
+				extype = temp == (int)temp ? NTYPE_INT : NTYPE_FLOAT;
 				break;
 			case LUA_TBOOLEAN:
 				extype = NTYPE_BOOL;

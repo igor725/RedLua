@@ -58,7 +58,7 @@ void ScriptMain(void) {
 		if(MenuInput::MenuSwitchPressed()) {
 			MenuInput::MenuInputBeep();
 			if(menuController->HasActiveMenu())
-				menuController->CloseAttempt();
+				menuController->PopMenu(0);
 			else
 				menuController->PushMenu(mainMenu);
 		}

@@ -3,7 +3,7 @@
 #include "thirdparty\scriptmenu.h"
 
 class MenuScripts : public MenuBase {
-	virtual void OnPop() {
+	virtual void OnPop(void) {
 		delete this;
 	}
 

@@ -9,11 +9,11 @@ extern const luaL_Reg redlibs[];
 static int log_print(lua_State *L) {
 	std::string logstr;
 	char pointer[20];
+	float tempf;
+	int tempi;
 
 	for(int i = 1; i <= lua_gettop(L); i++) {
 		switch(lua_type(L, i)) {
-			case LUA_TNONE:
-				continue;
 			case LUA_TNIL:
 				logstr.append("nil");
 				break;
@@ -21,7 +21,12 @@ static int log_print(lua_State *L) {
 				logstr.append(lua_toboolean(L, i) ? "true" : "false");
 				break;
 			case LUA_TNUMBER:
-				logstr.append(std::to_string(lua_tonumber(L, i)));
+				tempf = lua_tonumber(L, i);
+				tempi = (int)tempf;
+				if(tempi == tempf)
+					logstr.append(std::to_string(tempi));
+				else
+					logstr.append(std::to_string(tempf));
 				break;
 			case LUA_TSTRING:
 				logstr.append(lua_tostring(L, i));
@@ -83,14 +88,14 @@ class LuaScript {
 			path = "RedLua\\Scripts\\" + luafile;
 		}
 
-		~LuaScript() {
+		~LuaScript(void) {
 			if(LookForFunc("OnStop"))
 				CallFunc(0, 0);
 
 			lua_close(L);
 		}
 
-		virtual bool Load(std::string& error) {
+		bool Load(std::string& error) {
 			if(modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, modref);
 			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
 				modref = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -107,7 +112,7 @@ class LuaScript {
 			return false;
 		}
 
-		virtual bool LookForFunc(const char *name) {
+		bool LookForFunc(const char *name) {
 			if(enabled && modref != -1) {
 				lua_rawgeti(L, LUA_REGISTRYINDEX, modref);
 				lua_getfield(L, -1, name);
@@ -123,7 +128,7 @@ class LuaScript {
 			return false;
 		}
 
-		virtual bool CallFunc(int argn, int retn, bool stop_on_error = true) {
+		bool CallFunc(int argn, int retn, bool stop_on_error = true) {
 			if(lua_pcall(L, argn, retn, 0) != 0) {
 				if(stop_on_error) enabled = false, haserror = true;
 				LOG(ERROR) << "Lua error occured (" << path << "): " << lua_tostring(L, -1);
@@ -135,25 +140,25 @@ class LuaScript {
 			return true;
 		}
 
-		virtual void OnTick() {
+		void OnTick(void) {
 			if(LookForFunc("OnTick"))
 				CallFunc(0, 0);
 		}
 
-		virtual float GetMemoryUsage(void) {
+		float GetMemoryUsage(void) {
 			return lua_gc(L, LUA_GCCOUNTB, 0) / 1024.0f;
 		}
 
-		virtual void SetEnabled(bool en) {
+		void SetEnabled(bool en) {
 			lua_gc(L, LUA_GCCOLLECT, 0);
 			enabled = en;
 		}
 
-		virtual bool IsEnabled(void) {
+		bool IsEnabled(void) {
 			return enabled;
 		}
 
-		virtual bool HasError(void) {
+		bool HasError(void) {
 			return haserror;
 		}
 };

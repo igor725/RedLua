@@ -106,9 +106,9 @@ class MenuItemScript : public MenuItemDefault {
 
 		menu->AddItem(new MenuItemStatus("Status: "));
 		menu->AddItem(new MenuItemUsage("Usage: "));
+		menu->AddItem(new MenuItemToggle("Toggle"));
 		menu->AddItem(new MenuItemReload("Reload"));
 		menu->AddItem(new MenuItemUnload("Unload"));
-		menu->AddItem(new MenuItemToggle("Toggle"));
 
 		controller->PushMenu(menu);
 	}
