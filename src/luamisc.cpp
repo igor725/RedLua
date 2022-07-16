@@ -50,22 +50,22 @@ static const char *keynames[] = {
 };
 
 static int misc_iskeydown(lua_State *L) {
-	lua_pushboolean(L, IsKeyDown(luaL_checkinteger(L, 1)));
+	lua_pushboolean(L, IsKeyDown((DWORD)luaL_checkinteger(L, 1)));
 	return 1;
 }
 
 static int misc_iskeydownlong(lua_State *L) {
-	lua_pushboolean(L, IsKeyDownLong(luaL_checkinteger(L, 1)));
+	lua_pushboolean(L, IsKeyDownLong((DWORD)luaL_checkinteger(L, 1)));
 	return 1;
 }
 
 static int misc_iskeyjustup(lua_State *L) {
-	lua_pushboolean(L, IsKeyJustUp(luaL_checkinteger(L, 1), lua_toboolean(L, 2)));
+	lua_pushboolean(L, IsKeyJustUp((DWORD)luaL_checkinteger(L, 1), lua_toboolean(L, 2)));
 	return 1;
 }
 
 static int misc_resetkey(lua_State *L) {
-	ResetKeyState(luaL_checkinteger(L, 1));
+	ResetKeyState((DWORD)luaL_checkinteger(L, 1));
 	return 0;
 }
 

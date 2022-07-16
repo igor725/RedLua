@@ -15,6 +15,7 @@ typedef struct _NativeMeth {
 	UINT64 hash;
 	NativeType ret;
 	NativeParams params;
+	bool isVararg;
 } NativeMeth;
 
 typedef struct _NativeTypeInfo {
@@ -31,7 +32,7 @@ typedef struct _NativeObjectHeader {
 typedef struct _NativeObject {
 	NativeObjectHeader hdr;
 	union {
-		float f;
+		int i32;
 		UINT64 u64;
 		PUINT64 pu64;
 		const void *p;

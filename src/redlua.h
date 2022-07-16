@@ -88,6 +88,10 @@ class LuaScript {
 			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
 				modref = luaL_ref(L, LUA_REGISTRYINDEX);
 				enabled = true, haserror = false;
+
+				if(LookForFunc("OnLoad") && !CallFunc(0, 0))
+					return false;
+
 				return true;
 			}
 
@@ -113,7 +117,7 @@ class LuaScript {
 		}
 
 		virtual bool CallFunc(int argn, int retn, bool stop_on_error = true) {
-			if(lua_pcall(L, argn, retn, -1) != 0) {
+			if(lua_pcall(L, argn, retn, 0) != 0) {
 				if(stop_on_error) enabled = false, haserror = true;
 				LOG(ERROR) << "Lua error occured (" << path << "): " << lua_tostring(L, -1);
 				lua_pop(L, 1);

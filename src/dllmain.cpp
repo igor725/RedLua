@@ -1,10 +1,10 @@
+#include "dllmain.h"
 #include "base.h"
 #include "thirdparty\keyboard.h"
 #include "thirdparty\easyloggingpp.h"
 
 INITIALIZE_EASYLOGGINGPP
 el::Configurations conf("RedLua\\log.conf");
-#define EnsureDirectory(D) (!CreateDirectory(D, NULL) ? ERROR_ALREADY_EXISTS == GetLastError() : true)
 BOOL hasConsole = false;
 
 BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
@@ -32,6 +32,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 			scriptUnregister(hInstance);
 			keyboardHandlerUnregister(OnKeyboardMessage);
 			ScriptFinish();
+			fclose(stderr); fclose(stdout);
 			if(hasConsole && !FreeConsole())
 				LOG(ERROR) << "Failed to free console";
 			break;
