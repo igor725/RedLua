@@ -73,10 +73,18 @@ static int misc_gamever(lua_State *L) {
 	const char *ver;
 
 	switch(getGameVersion()) {
-		case VER_AUTO: ver = "VER_AUTO";
-		case VER_1_0_1207_60_RGS: ver = "VER_1_0_1207_60_RGS";
-		case VER_1_0_1207_69_RGS: ver = "VER_1_0_1207_69_RGS";
-		case VER_UNK: default: ver = "VER_UNK";
+		case VER_AUTO: ver = "auto"; // <--- ????
+		case VER_1_0_1207_60_RGS: ver = "1.0.1207.60"; break;
+		case VER_1_0_1207_69_RGS: ver = "1.0.1207.69"; break;
+		case VER_1_0_1207_73_RGS: ver = "1.0.1207.73"; break;
+		case VER_1_0_1207_77_RGS: ver = "1.0.1207.77"; break;
+		case VER_1_0_1207_80_RGS: ver = "1.0.1207.80"; break;
+		case VER_1_0_1232_13_RGS: ver = "1.0.1232.13"; break;
+		case VER_1_0_1232_17_RGS: ver = "1.0.1232.17"; break;
+		case VER_1_0_1311_12_RGS: ver = "1.0.1311.12"; break;
+		case VER_1_0_1436_25_RGS: ver = "1.0.1436.25"; break;
+		case VER_1_0_1436_31_RGS: ver = "1.0.1436.31"; break;
+		case VER_UNK: default: ver = "unknown"; break;
 	}
 
 	lua_pushstring(L, ver);
