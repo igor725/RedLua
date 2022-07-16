@@ -10,7 +10,9 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 		case DLL_PROCESS_ATTACH:
 			if(!EnsureDirectory("RedLua")
 			|| !EnsureDirectory("RedLua\\Scripts")
-			|| !EnsureDirectory("RedLua\\Logs"))
+			|| !EnsureDirectory("RedLua\\Logs")
+			|| !EnsureDirectory("RedLua\\Libs")
+			|| !EnsureDirectory("RedLua\\Libs\\C"))
 				break;
 
 			scriptRegister(hInstance, ScriptMain);

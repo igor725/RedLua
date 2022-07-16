@@ -68,6 +68,15 @@ class LuaScript {
 				lua_setglobal(L, lib->name);
 			}
 
+			lua_getglobal(L, "package");
+			if(!lua_isnil(L, -1)) {
+				lua_pushstring(L, "RedLua\\Libs\\?.lua;RedLua\\Libs\\?\\init.lua");
+				lua_setfield(L, -2, "path");
+				lua_pushstring(L, "RedLua\\Libs\\C\\?.dll;RedLua\\Libs\\C\\?\\core.dll");
+				lua_setfield(L, -2, "cpath");
+			}
+			lua_pop(L, 1);
+
 			lua_pushcfunction(L, log_print);
 			lua_setglobal(L, "print");
 
