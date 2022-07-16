@@ -26,7 +26,6 @@ static int log_print(lua_State *L) {
 			case LUA_TSTRING:
 				logstr.append(lua_tostring(L, i));
 				break;
-
 			default:
 				if(luaL_callmeta(L, i, "__tostring")) {
 					if(!lua_isstring(L, -1))
@@ -55,7 +54,7 @@ class LuaScript {
 	private:
 		lua_State *L;
 		std::string path;
-		bool enabled, haserror;
+		bool enabled = false, haserror = false;
 		int modref = LUA_REFNIL;
 
 	public:
@@ -73,7 +72,6 @@ class LuaScript {
 			lua_setglobal(L, "print");
 
 			path = "RedLua\\Scripts\\" + luafile;
-			enabled = false, haserror = false;
 		}
 
 		~LuaScript() {

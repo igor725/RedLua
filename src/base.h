@@ -9,7 +9,7 @@
 #include <map>
 #include "redlua.h"
 
-extern std::map <std::string, class LuaScript *> Scripts;
+extern std::map <std::string, LuaScript *> Scripts;
 
 void ScriptMain(void);
 void ScriptFinish(void);

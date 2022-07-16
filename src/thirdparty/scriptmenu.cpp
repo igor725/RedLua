@@ -51,7 +51,7 @@ void MenuItemBase::OnDraw(float lineTop, float lineLeft, bool active)
 }
 
 void MenuItemSwitchable::OnDraw(float lineTop, float lineLeft, bool active)
-{	
+{
 	MenuItemDefault::OnDraw(lineTop, lineLeft, active);
 	float lineWidth = GetLineWidth();
 	float lineHeight = GetLineHeight();
@@ -112,7 +112,7 @@ int MenuBase::OnInput()
 	const int screenCount = itemCount / MenuBase_linesPerScreen + (itemsLeft ? 1 : 0);
 	const int lineCountLastScreen = itemsLeft ? itemsLeft : MenuBase_linesPerScreen;
 
-	auto buttons = MenuInput::GetButtonState();	
+	auto buttons = MenuInput::GetButtonState();
 
 	int waitTime = 0;
 
@@ -128,10 +128,10 @@ int MenuBase::OnInput()
 		m_items[activeItemIndex]->OnSelect();
 	} else
 	if (buttons.b)
-	{ 
+	{
 		if (auto controller = GetController())
 			controller->PopMenu();
-	} else		
+	} else
 	if (buttons.up)
 	{
 		if (m_activeLineIndex-- == 0)

@@ -76,7 +76,7 @@ static int misc_gamever(lua_State *L) {
 		case VER_AUTO: ver = "VER_AUTO";
 		case VER_1_0_1207_60_RGS: ver = "VER_1_0_1207_60_RGS";
 		case VER_1_0_1207_69_RGS: ver = "VER_1_0_1207_69_RGS";
-		case VER_SIZE: case VER_UNK: default: ver = "VER_UNK";
+		case VER_UNK: default: ver = "VER_UNK";
 	}
 
 	lua_pushstring(L, ver);

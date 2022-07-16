@@ -34,7 +34,7 @@ enum eMenuItemClass
 };
 
 class MenuItemBase
-{	
+{
 	float		m_lineWidth;
 	float		m_lineHeight;
 	float		m_textLeft;
@@ -46,11 +46,11 @@ class MenuItemBase
 	MenuBase *	m_menu;
 protected:
 	MenuItemBase(
-		float lineWidth, float lineHeight, float textLeft, 
-		ColorRgba colorRect, ColorRgba colorText, 
+		float lineWidth, float lineHeight, float textLeft,
+		ColorRgba colorRect, ColorRgba colorText,
 		ColorRgba colorRectActive = {}, ColorRgba colorTextActive = {})
 		: m_lineWidth(lineWidth), m_lineHeight(lineHeight), m_textLeft(textLeft),
-			m_colorRect(colorRect), m_colorText(colorText), 
+			m_colorRect(colorRect), m_colorText(colorText),
 			m_colorRectActive(colorRectActive), m_colorTextActive(colorTextActive)	{}
 	void WaitAndDraw(int ms);
 	void SetStatusText(string text, int ms = 2500);
@@ -91,7 +91,7 @@ class MenuItemTitle : public MenuItemBase
 public:
 	MenuItemTitle(string caption)
 		: MenuItemBase(
-				MenuItemTitle_lineWidth, MenuItemTitle_lineHeight, MenuItemTitle_textLeft, 
+				MenuItemTitle_lineWidth, MenuItemTitle_lineHeight, MenuItemTitle_textLeft,
 				MenuItemTitle_colorRect, MenuItemTitle_colorText
 		  ),
 		  m_caption(caption) {}
@@ -105,7 +105,7 @@ class MenuItemListTitle : public MenuItemTitle
 	int		m_itemsTotal;
 public:
 	MenuItemListTitle(string caption)
-		: MenuItemTitle(caption), 
+		: MenuItemTitle(caption),
 			m_currentItemIndex(0), m_itemsTotal(0) {}
 	virtual eMenuItemClass GetClass() { return eMenuItemClass::ListTitle; }
 	virtual	string GetCaption() { return MenuItemTitle::GetCaption() + "  " + to_string(m_currentItemIndex) + "/" + to_string(m_itemsTotal); }
@@ -118,8 +118,8 @@ const float
 	MenuItemDefault_textLeft	= 0.01f;
 
 const ColorRgba
-	MenuItemDefault_colorRect			{ 70, 95, 95, 150 },		
-	MenuItemDefault_colorText			{ 255, 255, 255, 150 },		
+	MenuItemDefault_colorRect			{ 70, 95, 95, 150 },
+	MenuItemDefault_colorText			{ 255, 255, 255, 150 },
 	MenuItemDefault_colorRectActive		{ 218, 242, 216, 200 },
 	MenuItemDefault_colorTextActive		{ 0, 0, 0, 200 };
 
@@ -144,7 +144,7 @@ public:
 	MenuItemSwitchable(string caption)
 		: MenuItemDefault(caption),
 		m_state(false) {}
-	virtual eMenuItemClass GetClass() { return eMenuItemClass::Switchable; }	
+	virtual eMenuItemClass GetClass() { return eMenuItemClass::Switchable; }
 	virtual void OnDraw(float lineTop, float lineLeft, bool active);
 	virtual void OnSelect() { m_state = !m_state; }
 	void SetState(bool state) { m_state = state; }
@@ -160,7 +160,7 @@ public:
 		m_menu(menu) {}
 	virtual eMenuItemClass GetClass() { return eMenuItemClass::Menu; }
 	virtual void OnDraw(float lineTop, float lineLeft, bool active);
-	virtual	void OnSelect();	
+	virtual	void OnSelect();
 };
 
 const int
@@ -182,7 +182,7 @@ class MenuBase
 	MenuController *			m_controller;
 public:
 	MenuBase(MenuItemTitle *itemTitle)
-		: m_itemTitle(itemTitle), 
+		: m_itemTitle(itemTitle),
 		  m_activeLineIndex(0), m_activeScreenIndex(0) {}
 	~MenuBase()
 	{
@@ -219,7 +219,7 @@ public:
 	{
 		return {
 			IsKeyDown(VK_NUMPAD5) || (IsKeyDownLong(VK_CONTROL) && IsKeyDown(VK_RETURN)),
-			IsKeyDown(VK_NUMPAD0) || MenuSwitchPressed() || IsKeyDown(VK_BACK),
+			IsKeyDown(VK_NUMPAD0) || IsKeyDown(VK_BACK),
 			IsKeyDown(VK_NUMPAD8) || (IsKeyDownLong(VK_CONTROL) && IsKeyDown(VK_UP)),
 			IsKeyDown(VK_NUMPAD2) || (IsKeyDownLong(VK_CONTROL) && IsKeyDown(VK_DOWN)),
 			IsKeyDown(VK_NUMPAD6) || (IsKeyDownLong(VK_CONTROL) && IsKeyDown(VK_RIGHT)),
@@ -237,7 +237,7 @@ public:
 class MenuController
 {
 	vector<MenuBase *>		m_menuList;
-	vector<MenuBase *>		m_menuStack;	
+	vector<MenuBase *>		m_menuStack;
 
 	DWORD	m_inputTurnOnTime;
 
@@ -249,9 +249,9 @@ class MenuController
 	MenuBase *GetActiveMenu()	{	return m_menuStack.size() ? m_menuStack[m_menuStack.size() - 1] : NULL; }
 	void DrawStatusText();
 	void OnDraw()
-	{	
-		if (auto menu = GetActiveMenu()) 
-			menu->OnDraw(); 
+	{
+		if (auto menu = GetActiveMenu())
+			menu->OnDraw();
 		DrawStatusText();
 	}
 	void OnInput()
@@ -278,8 +278,13 @@ public:
 	bool HasActiveMenu()			{	return m_menuStack.size() > 0; }
 	void PushMenu(MenuBase *menu)	{	if (IsMenuRegistered(menu)) m_menuStack.push_back(menu); }
 	void PopMenu()					{   if (m_menuStack.size()) { m_menuStack.back()->OnPop(); m_menuStack.pop_back(); } }
-	void PopMenu(int count)         {   for(int i = 0; i < count; i++) PopMenu(); }
+	void PopMenu(size_t count)      {   for(size_t i = 0; i < count; i++) PopMenu(); }
 	void SetStatusText(string text, int ms) { m_statusText = text, m_statusTextMaxTicks = GetTickCount() + ms; }
+	void CloseAttempt()
+	{
+		size_t pops = m_menuStack.size() > 1 ? m_menuStack.size() - 1 : 1;
+		for(size_t i = 0; i < pops; i++) PopMenu();
+	}
 	bool IsMenuRegistered(MenuBase *menu)
 	{
 		for (size_t i = 0; i < m_menuList.size(); i++)

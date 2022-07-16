@@ -4,8 +4,6 @@
 #include "thirdparty\easyloggingpp.h"
 
 INITIALIZE_EASYLOGGINGPP
-el::Configurations conf("RedLua\\log.conf");
-BOOL hasConsole = false;
 
 BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 	switch(reason) {
@@ -15,16 +13,6 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 			|| !EnsureDirectory("RedLua\\Logs"))
 				break;
 
-			el::Loggers::reconfigureLogger("default", conf);
-			if(el::Loggers::getLogger("default")->typedConfigurations()->toStandardOutput(el::Level::Global)) {
-				if(AttachConsole(ATTACH_PARENT_PROCESS) || AllocConsole()) {
-					freopen("CONOUT$", "w", stdout);
-					freopen("CONOUT$", "w", stderr);
-					hasConsole = true;
-				}
-			}
-			LOG(INFO) << "Logger initialized";
-
 			scriptRegister(hInstance, ScriptMain);
 			keyboardHandlerRegister(OnKeyboardMessage);
 			break;
@@ -32,9 +20,6 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 			scriptUnregister(hInstance);
 			keyboardHandlerUnregister(OnKeyboardMessage);
 			ScriptFinish();
-			fclose(stderr); fclose(stdout);
-			if(hasConsole && !FreeConsole())
-				LOG(ERROR) << "Failed to free console";
 			break;
 	}
 

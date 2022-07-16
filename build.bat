@@ -1,4 +1,8 @@
 @echo off
+IF NOT "%VSCMD_ARG_TGT_ARCH%"=="x64" (
+	ECHO Unsupported architecture
+	EXIT /B 1
+)
 setlocal enableextensions enabledelayedexpansion
 SET RL_LUAJIT_SOURCE_DIR=.\src\thirdparty\luajit\src
 SET RL_SCRIPTHOOK_SDK_DIR=.\src\thirdparty\ScriptHook

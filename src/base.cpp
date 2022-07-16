@@ -6,7 +6,8 @@
 #include <windows.h>
 #include <map>
 
-std::map <std::string, class LuaScript *> Scripts {};
+std::map <std::string, LuaScript *> Scripts {};
+BOOL hasConsole = false;
 
 bool ScanForNewScripts(void) {
 	LOG(INFO) << "Searching for scripts...";
@@ -17,14 +18,14 @@ bool ScanForNewScripts(void) {
 	do {
 		if(!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 			if(!Scripts[FindData.cFileName]) {
-				class LuaScript *script = new LuaScript(FindData.cFileName);
+				LuaScript *script = new LuaScript(FindData.cFileName);
 				std::string error;
 				Scripts[FindData.cFileName] = script;
 
 				if(script->Load(error))
 					LOG(INFO) << "Script " << FindData.cFileName << " loaded";
 				else
-					LOG(ERROR) << "Failed to load script " << error; 
+					LOG(ERROR) << "Failed to load script " << error;
 			}
 		}
 	} while(FindNextFile(hFind, &FindData));
@@ -34,6 +35,19 @@ bool ScanForNewScripts(void) {
 }
 
 void ScriptMain(void) {
+	el::Configurations conf("RedLua\\log.conf");
+	el::Loggers::reconfigureLogger("default", conf);
+	if(el::Loggers::getLogger("default")->typedConfigurations()->toStandardOutput(el::Level::Global)) {
+		bool alloced = false;
+		if(AttachConsole(ATTACH_PARENT_PROCESS) || (alloced = AllocConsole()) == true) {
+			if(alloced) SetConsoleTitle("RedLua debug console");
+			freopen("CONOUT$", "w", stdout);
+			freopen("CONOUT$", "w", stderr);
+			hasConsole = true;
+		}
+	}
+
+	LOG(INFO) << "Logger initialized";
 	srand(GetTickCount());
 	ScanForNewScripts();
 
@@ -41,13 +55,18 @@ void ScriptMain(void) {
 	auto mainMenu = CreateMainMenu(menuController);
 
 	while(true) {
-		if (!menuController->HasActiveMenu() && MenuInput::MenuSwitchPressed()) {
+		if(MenuInput::MenuSwitchPressed()) {
 			MenuInput::MenuInputBeep();
-			menuController->PushMenu(mainMenu);
+			if(menuController->HasActiveMenu())
+				menuController->CloseAttempt();
+			else
+				menuController->PushMenu(mainMenu);
 		}
+
 		menuController->Update();
 		for(auto &s : Scripts)
 			s.second->OnTick();
+
 		WAIT(0);
 	}
 }
@@ -55,7 +74,10 @@ void ScriptMain(void) {
 void ScriptFinish(void) {
 	for(auto const & x : Scripts)
 		delete x.second;
-	
+
 	Scripts.clear();
 	LOG(INFO) << "RedLua stopped";
+	fclose(stderr); fclose(stdout);
+	if(hasConsole && !FreeConsole())
+		LOG(ERROR) << "Failed to free console";
 }

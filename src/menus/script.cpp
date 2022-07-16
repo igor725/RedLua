@@ -87,6 +87,17 @@ public:
 		: MenuItemDefault(title) {}
 };
 
+class MenuItemToggle : public MenuItemDefault {
+	virtual void OnSelect(void) {
+		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
+		script->SetEnabled(!script->IsEnabled());
+	}
+
+public:
+	MenuItemToggle(std::string title)
+		: MenuItemDefault(title) {}
+};
+
 class MenuItemScript : public MenuItemDefault {
 	virtual void OnSelect() {
 		auto menu = new MenuScript(new MenuItemTitle(this->GetCaption()), _script);
@@ -95,8 +106,9 @@ class MenuItemScript : public MenuItemDefault {
 
 		menu->AddItem(new MenuItemStatus("Status: "));
 		menu->AddItem(new MenuItemUsage("Usage: "));
-		menu->AddItem(new MenuItemReload("Reload this script"));
-		menu->AddItem(new MenuItemUnload("Unload this script"));
+		menu->AddItem(new MenuItemReload("Reload"));
+		menu->AddItem(new MenuItemUnload("Unload"));
+		menu->AddItem(new MenuItemToggle("Toggle"));
 
 		controller->PushMenu(menu);
 	}
