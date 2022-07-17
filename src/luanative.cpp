@@ -48,8 +48,8 @@ std::map<NativeType, NativeTypeInfo> NativeTypes {
 	{      NTYPE_PEDPTR, {NTYPE_ENTITYPTR,  true, "Ped*"       }},
 	{      NTYPE_PICKUP, {     NTYPE_VOID, false, "Pickup"     }},
 	{   NTYPE_PICKUPPTR, {     NTYPE_VOID,  true, "Pickup*"    }},
-	{      NTYPE_PLAYER, {   NTYPE_ENTITY, false, "Player"     }},
-	{   NTYPE_PLAYERPTR, {NTYPE_ENTITYPTR,  true, "Player*"    }},
+	{      NTYPE_PLAYER, {     NTYPE_VOID, false, "Player"     }},
+	{   NTYPE_PLAYERPTR, {     NTYPE_VOID,  true, "Player*"    }},
 	{   NTYPE_SCRHANDLE, {     NTYPE_VOID, false, "ScrHandle"  }},
 	{NTYPE_SCRHANDLEPTR, {     NTYPE_VOID,  true, "ScrHandle*" }},
 	{     NTYPE_VECTOR3, {     NTYPE_VOID, false, "Vector3"    }},
@@ -213,7 +213,8 @@ static void get_value(lua_State *L, int idx, NativeType extype, PUINT64 val) {
 	&nti_exp = get_type_info(extype);
 
 	if(extype != no->hdr.type) {
-		if(extype != nti_obj.superType && !IS_PTR_OF(extype, nti_exp, no->hdr.type, nti_obj))
+		if(extype != nti_obj.superType && nti_exp.superType != nti_obj.superType
+		&& !IS_PTR_OF(extype, nti_exp, no->hdr.type, nti_obj))
 			luaL_error(L, "bad argument #%d (%s expected, got %s)",
 				idx, nti_exp.name.c_str(), nti_obj.name.c_str());
 
@@ -239,8 +240,11 @@ static void push_native(lua_State *L, NativeType type, int id, int cache_ref = -
 		}
 
 		lua_pop(L, 2);
-	} else
-		cached = (int)lua_objlen(L, -2) + 1;
+	} else {
+		lua_rawgeti(L, LUA_REGISTRYINDEX, cache_ref);
+		cached = (int)lua_objlen(L, -1) + 1;
+		lua_pop(L, 1);
+	}
 
 	auto *no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
 	NATHDR_INIT(no->hdr, type, 1, cache_ref == ReferenceMap[L].nc);
@@ -312,9 +316,15 @@ static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 			}
 		}
 
-		UINT64 value;
-		get_value(L, idx, extype, &value);
-		nativePush(value);
+		if(extype != NTYPE_VECTOR3) {
+			UINT64 value;
+			get_value(L, idx, extype, &value);
+			nativePush(value);
+		} else {
+			auto *vec = (PUINT64)check_vector(L, idx);
+			for(int j = 0; j < 3; j++)
+				nativePush(vec[j]);
+		}
 	}
 }
 
