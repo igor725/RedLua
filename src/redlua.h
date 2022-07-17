@@ -9,7 +9,7 @@ extern const luaL_Reg redlibs[];
 static int log_print(lua_State *L) {
 	std::string logstr;
 	char pointer[20];
-	float tempf;
+	lua_Number tempd;
 	int tempi;
 
 	for(int i = 1; i <= lua_gettop(L); i++) {
@@ -21,12 +21,12 @@ static int log_print(lua_State *L) {
 				logstr.append(lua_toboolean(L, i) ? "true" : "false");
 				break;
 			case LUA_TNUMBER:
-				tempf = lua_tonumber(L, i);
-				tempi = (int)tempf;
-				if(tempi == tempf)
+				tempd = lua_tonumber(L, i);
+				tempi = (int)tempd;
+				if(tempi == tempd)
 					logstr.append(std::to_string(tempi));
 				else
-					logstr.append(std::to_string(tempf));
+					logstr.append(std::to_string(tempd));
 				break;
 			case LUA_TSTRING:
 				logstr.append(lua_tostring(L, i));

@@ -2,7 +2,9 @@
 #include "thirdparty\keyboard.h"
 #include "thirdparty\ScriptHook\inc\main.h"
 
-static const char *keynames[] = {
+static lua_Number GameVer = 0000.00;
+
+static const char *KeyNames[] = {
 	NULL, "VK_LBUTTON", "VK_RBUTTON", "VK_CANCEL", "VK_MBUTTON",
 	"VK_XBUTTON1", "VK_XBUTTON2", NULL, "VK_BACK", "VK_TAB",
 	NULL, NULL, "VK_CLEAR", "VK_RETURN", NULL, NULL,
@@ -70,24 +72,7 @@ static int misc_resetkey(lua_State *L) {
 }
 
 static int misc_gamever(lua_State *L) {
-	const char *ver;
-
-	switch(getGameVersion()) {
-		case VER_AUTO: ver = "auto"; // <--- ????
-		case VER_1_0_1207_60_RGS: ver = "1.0.1207.60"; break;
-		case VER_1_0_1207_69_RGS: ver = "1.0.1207.69"; break;
-		case VER_1_0_1207_73_RGS: ver = "1.0.1207.73"; break;
-		case VER_1_0_1207_77_RGS: ver = "1.0.1207.77"; break;
-		case VER_1_0_1207_80_RGS: ver = "1.0.1207.80"; break;
-		case VER_1_0_1232_13_RGS: ver = "1.0.1232.13"; break;
-		case VER_1_0_1232_17_RGS: ver = "1.0.1232.17"; break;
-		case VER_1_0_1311_12_RGS: ver = "1.0.1311.12"; break;
-		case VER_1_0_1436_25_RGS: ver = "1.0.1436.25"; break;
-		case VER_1_0_1436_31_RGS: ver = "1.0.1436.31"; break;
-		case VER_UNK: default: ver = "unknown"; break;
-	}
-
-	lua_pushstring(L, ver);
+	lua_pushnumber(L, GameVer);
 	return 1;
 }
 
@@ -104,10 +89,23 @@ static luaL_Reg misclib[] = {
 
 int luaopen_misc(lua_State *L) {
 	for(int i = 0; i < 256; i++) {
-		if(keynames[i]) {
+		if(KeyNames[i]) {
 			lua_pushinteger(L, i);
-			lua_setglobal(L, keynames[i]);
+			lua_setglobal(L, KeyNames[i]);
 		}
+	}
+
+	switch(getGameVersion()) {
+		case VER_1_0_1207_60_RGS: GameVer = 1207.60; break;
+		case VER_1_0_1207_69_RGS: GameVer = 1207.69; break;
+		case VER_1_0_1207_73_RGS: GameVer = 1207.73; break;
+		case VER_1_0_1207_77_RGS: GameVer = 1207.77; break;
+		case VER_1_0_1207_80_RGS: GameVer = 1207.80; break;
+		case VER_1_0_1232_13_RGS: GameVer = 1232.13; break;
+		case VER_1_0_1232_17_RGS: GameVer = 1232.17; break;
+		case VER_1_0_1311_12_RGS: GameVer = 1311.12; break;
+		case VER_1_0_1436_25_RGS: GameVer = 1436.25; break;
+		case VER_1_0_1436_31_RGS: GameVer = 1436.31; break;
 	}
 
 	luaL_newlib(L, misclib);

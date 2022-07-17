@@ -11,7 +11,7 @@ typedef struct _NativeVector {
 
 static void push_vector(lua_State *L, Vector3 *vec) {
 	auto *nv = (NativeVector *)lua_newuserdata(L, sizeof(NativeVector));
-	nv->hdr.type = NTYPE_VECTOR3; nv->hdr.size = 1;
+	NATHDR_INIT(nv->hdr, NTYPE_VECTOR3, 1, false);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 	if(!vec) nv->data.x = nv->data.y = nv->data.z = 0.0f;
 	else nv->data = *vec;
@@ -19,6 +19,14 @@ static void push_vector(lua_State *L, Vector3 *vec) {
 
 static Vector3 *check_vector(lua_State *L, int idx) {
 	auto *nv = (NativeVector *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
+	luaL_argcheck(L, nv->hdr.type == NTYPE_VECTOR3, idx, "not a vector");
+	return &nv->data;
+}
+
+static Vector3 *to_vector(lua_State *L, int idx) {
+	auto *nv = (NativeVector *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
+	if(nv->hdr.type == NTYPE_VECTOR3) return &nv->data;
+	return nullptr;
 }
 
 static int vector_tostring(lua_State *L, NativeVector *nv) {

@@ -7,28 +7,28 @@
 #include <map>
 
 std::map <std::string, LuaScript *> Scripts {};
-BOOL hasConsole = false;
+static BOOL HasConsole = false;
 
 bool ScanForNewScripts(void) {
 	LOG(INFO) << "Searching for scripts...";
-	WIN32_FIND_DATA FindData;
-	HANDLE hFind = FindFirstFile("RedLua\\Scripts\\*.lua", &FindData);
+	WIN32_FIND_DATA findData;
+	HANDLE hFind = FindFirstFile("RedLua\\Scripts\\*.lua", &findData);
 	if(hFind == INVALID_HANDLE_VALUE) return false;
 
 	do {
-		if(!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			if(!Scripts[FindData.cFileName]) {
-				LuaScript *script = new LuaScript(FindData.cFileName);
+		if(!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			if(!Scripts[findData.cFileName]) {
+				LuaScript *script = new LuaScript(findData.cFileName);
 				std::string error;
-				Scripts[FindData.cFileName] = script;
+				Scripts[findData.cFileName] = script;
 
 				if(script->Load(error))
-					LOG(INFO) << "Script " << FindData.cFileName << " loaded";
+					LOG(INFO) << "Script " << findData.cFileName << " loaded";
 				else
 					LOG(ERROR) << "Failed to load script " << error;
 			}
 		}
-	} while(FindNextFile(hFind, &FindData));
+	} while(FindNextFile(hFind, &findData));
 
 	FindClose(hFind);
 	return true;
@@ -43,7 +43,7 @@ void ScriptMain(void) {
 			if(alloced) SetConsoleTitle("RedLua debug console");
 			freopen("CONOUT$", "w", stdout);
 			freopen("CONOUT$", "w", stderr);
-			hasConsole = true;
+			HasConsole = true;
 		}
 	}
 
@@ -78,6 +78,6 @@ void ScriptFinish(void) {
 	Scripts.clear();
 	LOG(INFO) << "RedLua stopped";
 	fclose(stderr); fclose(stdout);
-	if(hasConsole && !FreeConsole())
+	if(HasConsole && !FreeConsole())
 		LOG(ERROR) << "Failed to free console";
 }

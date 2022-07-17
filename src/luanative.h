@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 
-typedef enum _NativeType {
+typedef enum _NativeType : int {
 	NTYPE_UNKNOWN = -1,
 	NTYPE_VOID,
 	NTYPE_INT,
@@ -71,6 +71,7 @@ typedef struct _NativeMeth {
 	UINT64 hash;
 	NativeType ret;
 	NativeParams params;
+	long firstSeen;
 	bool isVararg;
 } NativeMeth;
 
@@ -83,7 +84,12 @@ typedef struct _NativeTypeInfo {
 typedef struct _NativeObjectHeader {
 	NativeType type;
 	UINT size;
+	int owncache, readonly;
 } NativeObjectHeader;
+
+#define NATHDR_INIT(H, T, S, R) ((H).type = (NativeType)(T), (H).size = (UINT)(S),\
+	(H).owncache = 0, (H).readonly = R)
+#define NATHDR_SZ sizeof(NativeObjectHeader)
 
 typedef struct _NativeObject {
 	NativeObjectHeader hdr;
@@ -108,6 +114,7 @@ typedef enum _NativeReturn {
 	NLOAD_METHOD_NONSTRING_RETURN_TYPE,
 	NLOAD_METHOD_PARAM_INVALID_TYPE,
 	NLOAD_METHOD_PARAM_NONSTRING_TYPE,
+	NLOAD_METHOD_PARAM_NONSTRING_NAME,
 	NLOAD_METHOD_PARAM_NONOBJECT,
 	NLOAD_METHOD_PARAMS_NONARRAY,
 } NativeReturn;
