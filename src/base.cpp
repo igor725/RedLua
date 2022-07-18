@@ -1,7 +1,7 @@
-#include "base.h"
+#include "base.hpp"
 #include "thirdparty\easyloggingpp.h"
-#include "redlua.h"
-#include "menus\main.h"
+#include "redlua.hpp"
+#include "menus\main.hpp"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <map>

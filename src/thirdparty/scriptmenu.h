@@ -6,7 +6,12 @@
 
 #pragma once
 
-#include "base.h"
+#include "thirdparty\ScriptHook\inc\natives.h"
+#include "thirdparty\ScriptHook\inc\types.h"
+#include "thirdparty\ScriptHook\inc\enums.h"
+
+#include "thirdparty\ScriptHook\inc\main.h"
+
 #include "keyboard.h"
 
 #include <windows.h>

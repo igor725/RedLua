@@ -95,6 +95,21 @@ class LuaScript {
 			lua_close(L);
 		}
 
+		void Load(void) {
+			if(modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, modref);
+			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
+				modref = luaL_ref(L, LUA_REGISTRYINDEX);
+				enabled = true, haserror = false;
+
+				if(LookForFunc("OnLoad") && !CallFunc(0, 0))
+					return;
+			}
+
+			enabled = false, haserror = true;
+			lua_pop(L, 1);
+			return;
+		}
+
 		bool Load(std::string& error) {
 			if(modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, modref);
 			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
@@ -109,6 +124,7 @@ class LuaScript {
 
 			enabled = false, haserror = true;
 			error = lua_tostring(L, -1);
+			lua_pop(L, 1);
 			return false;
 		}
 

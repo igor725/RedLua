@@ -1,6 +1,6 @@
-#include "redlua.h"
-#include "luanative.h"
-#include "luamisc.h"
+#include "redlua.hpp"
+#include "luanative.hpp"
+#include "luamisc.hpp"
 
 const luaL_Reg redlibs[] = {
 	{"native", luaopen_native},

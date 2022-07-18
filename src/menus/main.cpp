@@ -1,7 +1,8 @@
 #include "thirdparty\scriptmenu.h"
-#include "menus\settings.h"
-#include "menus\script.h"
-#include "menus\about.h"
+#include "menus\settings.hpp"
+#include "menus\script.hpp"
+#include "menus\about.hpp"
+#include "base.hpp"
 
 class MenuItemScripts : public MenuItemDefault {
 	virtual void OnSelect() {
@@ -35,7 +36,7 @@ MenuBase *CreateMainMenu(MenuController *controller) {
 	controller->RegisterMenu(menu);
 
 	menu->AddItem(new MenuItemScripts("Scripts"));
-	menu->AddItem(new MenuItemUpdates("Load new scripts"));
+	menu->AddItem(new MenuItemUpdates("Refresh scripts"));
 	menu->AddItem(new MenuItemMenu("Settings", CreateSettings(controller)));
 	menu->AddItem(new MenuItemMenu("About", CreateAbout(controller)));
 

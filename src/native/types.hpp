@@ -1,7 +1,6 @@
 #pragma once
 
-#define LUANATIVE_OBJECT "NativeObject"
-#include "thirdparty\luajit\src\lua.hpp"
+#include "thirdparty/ScriptHook/inc/types.h"
 #include <string>
 #include <map>
 
@@ -77,7 +76,7 @@ typedef struct _NativeMeth {
 
 typedef struct _NativeTypeInfo {
 	NativeType superType;
-	BOOL isPointer;
+	bool isPointer;
 	std::string name;
 } NativeTypeInfo;
 
@@ -103,21 +102,21 @@ typedef struct _NativeObject {
 
 typedef std::map<std::string, NativeMeth> NativeNamespace;
 typedef std::map<std::string, NativeNamespace> NativeNamespaces;
+typedef std::map<NativeType, NativeTypeInfo> NativeTypeMap;
 
-typedef enum _NativeReturn {
-	NLOAD_OK,
-	NLOAD_OPEN_FILE,
-	NLOAD_NONOBJECT,
-	NLOAD_JSON_PARSE,
-	NLOAD_METHOD_NONSTRING_NAME,
-	NLOAD_METHOD_INVALID_RETURN_TYPE,
-	NLOAD_METHOD_NONSTRING_RETURN_TYPE,
-	NLOAD_METHOD_PARAM_INVALID_TYPE,
-	NLOAD_METHOD_PARAM_NONSTRING_TYPE,
-	NLOAD_METHOD_PARAM_NONSTRING_NAME,
-	NLOAD_METHOD_PARAM_NONOBJECT,
-	NLOAD_METHOD_PARAMS_NONARRAY,
-} NativeReturn;
+extern NativeTypeMap NativeTypes;
 
-NativeReturn native_reload(void);
-int luaopen_native(lua_State *L);
+static NativeTypeInfo& get_type_info(NativeType id) {
+	if(NativeTypes.find(id) == NativeTypes.end())
+		return NativeTypes[NTYPE_UNKNOWN];
+	return NativeTypes[id];
+}
+
+static NativeType get_type(std::string& name) {
+	for(auto& i : NativeTypes) {
+		if(i.second.name == name)
+			return i.first;
+	}
+
+	return NTYPE_UNKNOWN;
+}

@@ -1,4 +1,4 @@
-#include "redlua.h"
+#include "redlua.hpp"
 #include "thirdparty\keyboard.h"
 #include "thirdparty\ScriptHook\inc\main.h"
 

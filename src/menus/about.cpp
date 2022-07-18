@@ -1,4 +1,4 @@
-#include "menus\about.h"
+#include "menus\about.hpp"
 #include <shellapi.h>
 
 class MenuItemLink : public MenuItemDefault {

@@ -1,7 +1,8 @@
-#include "dllmain.h"
-#include "base.h"
+#include "dllmain.hpp"
+#include "base.hpp"
 #include "thirdparty\keyboard.h"
 #include "thirdparty\easyloggingpp.h"
+#include "thirdparty\ScriptHook\inc\main.h"
 
 INITIALIZE_EASYLOGGINGPP
 

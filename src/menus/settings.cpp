@@ -1,5 +1,7 @@
 #include "thirdparty\scriptmenu.h"
-#include "menus\settings.h"
+#include "menus\settings.hpp"
+#include "native\db.hpp"
+#include "base.hpp"
 
 class MenuItemAutorun : public MenuItemSwitchable {
 	virtual void OnSelect() {
@@ -8,8 +10,6 @@ class MenuItemAutorun : public MenuItemSwitchable {
 		SetStatusText("Not ready yet");
 		SetState(newState);
 	}
-
-	virtual void OnFrame() {}
 
 public:
 	MenuItemAutorun(string caption)
@@ -30,10 +30,25 @@ public:
 		: MenuItemDefault(caption) {}
 };
 
+class MenuItemToggleAll : public MenuItemDefault {
+	bool m_state = true;
+
+	virtual void OnSelect() {
+		SetStatusText((m_state = !m_state) ? "All scripts were running" : "All scripts have been stopped");
+		for(auto &s : Scripts)
+			s.second->SetEnabled(m_state);
+	}
+
+public:
+	MenuItemToggleAll(string caption)
+		: MenuItemDefault(caption) {}
+};
+
 class MenuItemReloadAll : public MenuItemDefault {
 	virtual void OnSelect() {
-		// Перезагрузка Lua скриптов
-		SetStatusText("Not ready yet");
+		SetStatusText("All scripts were reloaded");
+		for(auto &s : Scripts)
+			s.second->Load();
 	}
 
 public:
@@ -43,8 +58,11 @@ public:
 
 class MenuItemUnloadAll : public MenuItemDefault {
 	virtual void OnSelect() {
-		// Выгрузка Lua скриптов
-		SetStatusText("Not ready yet");
+		SetStatusText("All scripts were unloaded");
+		for(std::map<std::string, LuaScript *>::iterator it = Scripts.begin(); it != Scripts.end();) {
+			delete (*it).second;
+			it = Scripts.erase(it);
+		}
 	}
 
 public:
@@ -58,6 +76,7 @@ MenuBase *CreateSettings(MenuController *controller) {
 
 	menu->AddItem(new MenuItemAutorun("Autorun feature enabled"));
 	menu->AddItem(new MenuItemReloadDB("Reload native database"));
+	menu->AddItem(new MenuItemToggleAll("Toggle all scripts"));
 	menu->AddItem(new MenuItemReloadAll("Reload all scripts"));
 	menu->AddItem(new MenuItemUnloadAll("Unload all scripts"));
 

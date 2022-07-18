@@ -1,6 +1,6 @@
-#include "base.h"
-#include "redlua.h"
-#include "menus\script.h"
+#include "base.hpp"
+#include "redlua.hpp"
+#include "menus\script.hpp"
 
 class MenuScript : public MenuBase {
 	virtual void OnPop() {
