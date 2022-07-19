@@ -1,7 +1,7 @@
 #pragma once
 
 #include "thirdparty\json.hpp"
-#include "native/types.hpp"
+#include "native\types.hpp"
 #include <fstream>
 
 using json = nlohmann::json;

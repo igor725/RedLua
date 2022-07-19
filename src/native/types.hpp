@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thirdparty/ScriptHook/inc/types.h"
+#include "thirdparty\ScriptHook\inc\types.h"
 #include <string>
 #include <map>
 
@@ -59,6 +59,9 @@ typedef enum _NativeType : int {
 	NTYPE_VOLUMEPTR
 } NativeType;
 
+typedef unsigned long long NativeData;
+#define NATIVEDATA_INVAL ((NativeData)-1)
+
 typedef struct _NativeParam {
 	NativeType type;
 	std::string name;
@@ -77,6 +80,7 @@ typedef struct _NativeMeth {
 typedef struct _NativeTypeInfo {
 	NativeType superType;
 	bool isPointer;
+	uint size;
 	std::string name;
 } NativeTypeInfo;
 
@@ -96,7 +100,8 @@ typedef struct _NativeObject {
 		int i32;
 		UINT64 u64;
 		PUINT64 pu64;
-		const void *p;
+		const void *cp;
+		void *p;
 	} hash;
 } NativeObject;
 

@@ -3,13 +3,13 @@
 #include "thirdparty\ScriptHook\inc\nativeCaller.h"
 #include "thirdparty\ScriptHook\inc\types.h"
 
-#include "native/db.hpp"
-#include "native/cache.hpp"
-#include "native/object.hpp"
+#include "native\db.hpp"
+#include "native\cache.hpp"
+#include "native\object.hpp"
 
 #define IS_PTR_OF(t1, ti1, t2, ti2) (ti1.isPointer && (((t1) - (t2)) == 1 || ((t1) - (ti2).superType) == 1))
 
-static void get_value(lua_State *L, int idx, NativeType extype, PUINT64 val) {
+static void native_prepare_arg(lua_State *L, int idx, NativeType extype, PUINT64 val) {
 	union {
 		float f;
 		UINT64 u64;
@@ -26,8 +26,8 @@ static void get_value(lua_State *L, int idx, NativeType extype, PUINT64 val) {
 				extype = NTYPE_BOOL;
 				break;
 			case LUA_TSTRING:
-				extype = NTYPE_STRING;
-				break;
+				*val = (UINT64)lua_tostring(L, idx);
+				return;
 			case LUA_TUSERDATA:
 				extype = NTYPE_ANY;
 				break;
@@ -35,10 +35,14 @@ static void get_value(lua_State *L, int idx, NativeType extype, PUINT64 val) {
 				extype = NTYPE_VOID;
 				break;
 		}
+	} else if(extype == NTYPE_ANYPTR && lua_type(L, idx) == 10) { // В "Any*" передана LUA_TCDATA
+		*val = (UINT64)lua_topointer(L, idx);
+		return;
 	}
 
 	switch(extype) {
 		case NTYPE_INT:
+		case NTYPE_HASH:
 			*val = luaL_checkinteger(L, idx);
 			return;
 		case NTYPE_FLOAT:
@@ -53,7 +57,7 @@ static void get_value(lua_State *L, int idx, NativeType extype, PUINT64 val) {
 			return;
 	}
 
-	auto *no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
+	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
 	NativeTypeInfo &nti_obj = get_type_info(no->hdr.type),
 	&nti_exp = get_type_info(extype);
 	luaL_argcheck(L, !nti_exp.isPointer || !no->hdr.readonly, idx,
@@ -84,7 +88,7 @@ static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 		if(extype == NTYPE_FLOAT && methargs - i >= 3) {
 			if(meth->params[i + 1].type == NTYPE_FLOAT
 			&& meth->params[i + 2].type == NTYPE_FLOAT) {
-				auto *vec = (PUINT64)to_vector(L, idx);
+				auto vec = (PUINT64)to_vector(L, idx);
 				if(vec != nullptr) {
 					for(int j = 0; j < 3; j++, i++)
 						nativePush(vec[j]);
@@ -95,14 +99,19 @@ static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 
 		if(extype != NTYPE_VECTOR3) {
 			UINT64 value;
-			get_value(L, idx, extype, &value);
+			native_prepare_arg(L, idx, extype, &value);
 			nativePush(value);
 		} else {
-			auto *vec = (PUINT64)check_vector(L, idx);
+			auto vec = (PUINT64)check_vector(L, idx);
 			for(int j = 0; j < 3; j++)
 				nativePush(vec[j]);
 		}
 	}
+}
+
+static int native_perform(lua_State *L, NativeMeth *meth) {
+	// TODO: Ещё какая-нибудь фигня???
+	return push_value(L, meth->ret, nativeCall());
 }
 
 static int generic_newindex(lua_State *L) {
@@ -123,7 +132,7 @@ static int meth_call(lua_State *L) {
 	NativeMeth *_meth = native_search(lua_tostring(L, -1), lua_tostring(L, -3));
 	if(!_meth) luaL_error(L, "Method not found");
 	native_prepare(L, _meth, nargs - 2);
-	return push_value(L, _meth->ret, nativeCall());
+	return native_perform(L, _meth);
 }
 
 static const luaL_Reg methmeta[] = {

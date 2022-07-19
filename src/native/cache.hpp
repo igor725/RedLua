@@ -1,14 +1,14 @@
 #pragma once
 
 #include "thirdparty\luajit\src\lua.hpp"
-#include "native/types.hpp"
+#include "native\types.hpp"
 #include <map>
 
 typedef struct _RefMap {int ns, nc;} RefMap;
 std::map<lua_State *, RefMap> ReferenceMap {};
-std::map<int, std::map<NativeType, std::map<int, int>>> NativeCache {};
+std::map<int, std::map<NativeType, std::map<NativeData, int>>> NativeCache {};
 
-static int from_cache(int cache_ref, NativeType type, int id) {
+static int from_cache(int cache_ref, NativeType type, NativeData id) {
 	if(NativeCache.find(cache_ref) == NativeCache.end())
 		return 0;
 	if(NativeCache[cache_ref].find(type) == NativeCache[cache_ref].end())

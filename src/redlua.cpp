@@ -8,5 +8,3 @@ const luaL_Reg redlibs[] = {
 
 	{NULL, NULL}
 };
-
-
