@@ -114,6 +114,11 @@ class LuaScript {
 			if(modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, modref);
 			if((luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 1, 0)) == 0) {
 				modref = luaL_ref(L, LUA_REGISTRYINDEX);
+				if(modref == LUA_REFNIL) {
+					enabled = false, haserror = true;
+					error = path + " does not return the table";
+					return false;
+				}
 				enabled = true, haserror = false;
 
 				if(LookForFunc("OnLoad") && !CallFunc(0, 0))

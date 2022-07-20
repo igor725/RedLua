@@ -31,6 +31,7 @@ static int native_info(lua_State *L) {
 		luaL_checkstring(L, 2)
 	);
 
+	if(meth == nullptr) return 0;
 	lua_createtable(L, 0, 4);
 	lua_pushfstring(L, "%p", meth->hash);
 	lua_setfield(L, -2, "hash");
