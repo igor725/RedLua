@@ -1,0 +1,70 @@
+name: Build plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: RedLua
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: prevtag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        with:
+          fallback: '0.1'
+
+      - name: Checkout LuaJIT
+        uses: actions/checkout@v3
+        with:
+          path: .\src\thirdparty\LuaJIT
+          repository: LuaJIT/LuaJIT
+          fetch-depth: 0
+
+      - name: Download ScriptHookSDK
+        shell: pwsh
+        run: .\misc\ScriptHook.ps1
+
+      - name: Detect MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86_64
+
+      - name: Build plugin
+        run: .\build.bat
+
+      - name: Build release archive
+        run: |
+          mkdir .\objs\output\RedLua\
+          curl.exe -o.\objs\output\RedLua\natives.json https://raw.githubusercontent.com/alloc8or/rdr3-nativedb-data/master/natives.json
+          7z.exe a -tzip .\objs\out.zip .\objs\output\*.* -r
+
+      - name: Create release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Pre-release ${{ github.ref_name }}
+          body: |
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prevtag.outputs.tag }}...${{ github.ref_name }}
+          draft: false
+          prerelease: true
+
+      - name: Upload assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: .\objs\out.zip
+          asset_name: RedLua-${{ github.ref_name }}.zip
+          asset_content_type: application/zip
