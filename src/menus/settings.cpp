@@ -1,25 +1,23 @@
 #include "thirdparty\scriptmenu.h"
 #include "menus\settings.hpp"
-#include "native\db.hpp"
+#include "settingsctl.hpp"
+#include "nativedb.hpp"
 #include "base.hpp"
 
 class MenuItemAutorun : public MenuItemSwitchable {
 	virtual void OnSelect() {
-		bool newState = !GetState();
-		// TODO: Переключение авторана
-		SetStatusText("Not ready yet");
-		SetState(newState);
+		SetState(Settings.Switch("autorun", true));
 	}
 
 public:
-	MenuItemAutorun(string caption)
-		: MenuItemSwitchable(caption) {}
+	MenuItemAutorun(string caption, bool initial)
+		: MenuItemSwitchable(caption, initial) {}
 };
 
 class MenuItemReloadDB : public MenuItemDefault {
 	virtual void OnSelect() {
-		NativeReturn ret;
-		if((ret = native_reload()) == NLOAD_OK)
+		NativeDB::Returns ret;
+		if((ret = Natives.Load()) == NativeDB::Returns::NLOAD_OK)
 			SetStatusText("Natives database has been reloaded");
 		else
 			SetStatusText("Failed to parse natives.json: " + std::to_string(ret));
@@ -74,7 +72,7 @@ MenuBase *CreateSettings(MenuController *controller) {
 	auto menu = new MenuBase(new MenuItemTitle("RedLua Settings"));
 	controller->RegisterMenu(menu);
 
-	menu->AddItem(new MenuItemAutorun("Autorun feature enabled"));
+	menu->AddItem(new MenuItemAutorun("Autorun feature enabled", Settings.Read("autorun", true)));
 	menu->AddItem(new MenuItemReloadDB("Reload native database"));
 	menu->AddItem(new MenuItemToggleAll("Toggle all scripts"));
 	menu->AddItem(new MenuItemReloadAll("Reload all scripts"));

@@ -38,6 +38,7 @@ typedef long long NativeCacheField;
 typedef unsigned long long NativeData;
 #define NATIVEDATA_INVAL ((NativeCacheField)-1)
 #define NATIVECACHE_DISABLE ((int)-2)
+#define NATIVECACHE_NODATA ((NativeData)-1)
 
 typedef struct _NativeParam {
 	NativeType type;
@@ -69,14 +70,14 @@ typedef std::map<NativeType, NativeTypeInfo> NativeTypeMap;
 
 extern NativeTypeMap NativeTypes;
 
-static NativeTypeInfo& get_type_info(NativeType id) {
+static NativeTypeInfo &get_type_info(NativeType id) {
 	if(NativeTypes.find(id) == NativeTypes.end())
 		return NativeTypes[NTYPE_UNKNOWN];
 	return NativeTypes[id];
 }
 
-static NativeType get_type(std::string& name) {
-	for(auto& i : NativeTypes) {
+static NativeType get_type(std::string &name) {
+	for(auto &i : NativeTypes) {
 		if(i.second.name == name)
 			return i.first;
 	}
@@ -97,6 +98,7 @@ typedef struct _NativeObject {
 	union _NativeContent {
 		int i32;
 		void *p;
+		void **pp;
 		NativeData nd;
 	} content;
 } NativeObject;
@@ -113,9 +115,10 @@ typedef struct _NativeVector {
 
 #define NATIVEOBJECT_INITLIGHT(X, T, R, C, D) (X)->hdr.type = (T), \
 	(X)->hdr.isPointer = true, (X)->hdr.isReadOnly = (R), \
-	(X)->hdr.count = (C), (X)->content.p = (D), \
+	(X)->hdr.count = (C), (X)->content.nd = (D), \
 	(X)->hdr.ownCache = 0
 
 #define NATIVEOBJECT_GETPTR(X) ((X)->hdr.isPointer ? (X)->content.p : &(X)->content.i32)
+#define NATIVEOBJECT_HDRSIZE (sizeof(NativeObject) - sizeof(NativeData))
 
 #define NOBJCOUNT_UNKNOWN ((uint)-1)

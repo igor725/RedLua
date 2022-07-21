@@ -5,7 +5,7 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "D:\\luajit\\src\\luajit.exe",
-			"args": ["test.lua"],
+			"args": ["sl_test.lua"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}\\objs\\output\\",
 			"environment": [],

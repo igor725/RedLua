@@ -28,32 +28,39 @@ static PUINT64 nativeCall() {
 
 #include "thirdparty\ScriptHook\inc\types.h"
 
-#include "native\db.hpp"
+#include "nativedb.hpp"
 #include "native\cache.hpp"
 #include "native\object.hpp"
 
 static int native_prepare_arg_error(lua_State *L, NativeParam *param, int idx) {
-	static std::string ptr[] = {"*", ""};
-	return luaL_typerror(L, idx,
-		(get_type_info(param->type).name + ptr[param->isPointer]).c_str());
+	static std::string ptr[] = {"", "*"};
+	return luaL_typerror(L, idx, (get_type_info(
+		param ? param->type : NTYPE_UNKNOWN).name + ptr[param->isPointer]
+	).c_str());
 }
 
 #define IS_TYPES_EQU(AT, A, BT) ((AT) == (BT) || (A).superType == (BT))
 
 static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
 	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
-	auto nti_no = get_type_info(no->hdr.type);
 
-	if(IS_TYPES_EQU(no->hdr.type, nti_no, param->type)) {
-		if(param->isPointer == no->hdr.isPointer)
+	if(vector_allowed && no->hdr.type == NTYPE_VECTOR3) {
+		auto vec = (float *)NATIVEOBJECT_GETPTR(no);
+		for(auto i = 0; i < 3; i++)
+			nativePush(vec[i * 2]);
+		return 3;
+	}
+	
+	if(!param || IS_TYPES_EQU(no->hdr.type, get_type_info(no->hdr.type), param->type)) {
+		if(param ? (param->isPointer == no->hdr.isPointer) : no->hdr.isPointer)
 			return (nativePush(no->content.nd), 1);
-		else if(param->isPointer)
+		else if(!param || param->isPointer)
 			return (nativePush(&no->content.nd), 1);
-		else
-			return native_prepare_arg_error(L, param, idx);
+		else if(no->hdr.isPointer)
+			return (nativePush(*no->content.pp), 1);
 	}
 
-	return 0;
+	return native_prepare_arg_error(L, param, idx);
 }
 
 static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
@@ -61,31 +68,31 @@ static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allo
 
 	switch(lua_type(L, idx)) {
 		case LUA_TNIL:
-			if(param->isPointer)
+			if(!param || param->isPointer)
 				return (nativePush(nullptr), 1);
 			break;
 		case LUA_TBOOLEAN:
-			if(param->type == NTYPE_BOOL && !param->isPointer)
+			if(!param || (param->type == NTYPE_BOOL && !param->isPointer))
 				return (nativePush(lua_toboolean(L, idx)), 1);
 
 			break;
 		case LUA_TNUMBER:
-			if(!param->isPointer) {
+			if(!param || !param->isPointer) {
 				temp = (float)lua_tonumber(L, idx);
-				if(temp == (int)temp && param->type == NTYPE_FLOAT)
+				if(param->type == NTYPE_FLOAT)
 					return (nativePush(temp), 1);
 				else if(param->type == NTYPE_INT)
 					return (nativePush((int)temp), 1);
 			}
 			break;
 		case LUA_TSTRING:
-			if(param->type == NTYPE_CHAR && param->isPointer /*&&param->isConst*/)
+			if((!param || param->type == NTYPE_CHAR && param->isPointer /*&&param->isConst*/))
 				return (nativePush(lua_tostring(L, idx)), 1);
 			break;
 		case LUA_TUSERDATA:
 			return native_prepare_nobj(L, param, vector_allowed, idx);
 		case 10/*LUA_TCDATA*/:
-			if(param->type == NTYPE_ANY && param->isPointer)
+			if(!param || (param->type == NTYPE_ANY && param->isPointer))
 				return (nativePush(lua_topointer(L, idx)), 1);
 			break;
 	}
@@ -169,7 +176,7 @@ static int nspace_index(lua_State *L) {
 	int mt_top = (int)lua_objlen(L, -1) + 1;
 	lua_rawgeti(L, 1, 2);
 	lua_rawgeti(L, -1, mt_top);
-	auto meth = native_method(
+	auto meth = Natives.GetMethod(
 		(NativeNamespace *)lua_touserdata(L, -1),
 		lua_tostring(L, 2)
 	);
@@ -194,7 +201,7 @@ static int global_index(lua_State *L) {
 	lua_pushvalue(L, 2);
 	lua_rawget(L, LUA_GLOBALSINDEX);
 	if(lua_isnil(L, -1) && lua_type(L, 2) == LUA_TSTRING) {
-		auto nspace = native_namespace(lua_tostring(L, 2));
+		auto nspace = Natives.GetNamespace(lua_tostring(L, 2));
 		if(nspace == nullptr) return 1; // Возвращаем тот nil, что нам дал rawget выше
 
 		lua_pop(L, 1);

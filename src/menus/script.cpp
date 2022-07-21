@@ -53,13 +53,10 @@ public:
 class MenuItemReload : public MenuItemDefault {
 	virtual void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
-		std::string error;
-		if(script->Load(error))
+		if(script->Load())
 			SetStatusText("Script successfully reloaded");
-		else {
+		else
 			SetStatusText("Failed to reload script, see logs");
-			LOG(ERROR) << "Failed to reload script " + error;
-		}
 	}
 
 public:
@@ -126,7 +123,7 @@ MenuScripts *CreateScriptsList(MenuController *controller) {
 	controller->RegisterMenu(menu);
 
 	if(Scripts.size() > 0) {
-		for(auto const& x : Scripts)
+		for(auto &x : Scripts)
 			menu->AddItem(new MenuItemScript(x.first, x.second));
 	} else
 		menu->AddItem(new MenuItemDefault("No scripts found"));

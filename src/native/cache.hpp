@@ -25,7 +25,10 @@ static bool search_in_cache
 	NativeType type, NativeData id, int *cached
 ) {
 	if(*cache_ref > NATIVECACHE_DISABLE) { // Если cache_ref меньше или равен -2, значит кеширование выключено
-		*cache_id = *cache_id < 0 ? id : *cache_id, *cache_ref = *cache_ref > 0 ? *cache_ref : ReferenceMap[L].nc;
+		*cache_id = *cache_id == NATIVEDATA_INVAL ? id : *cache_id,
+		*cache_ref = *cache_ref > 0 ? *cache_ref : ReferenceMap[L].nc;
+		if(*cache_id == NATIVEDATA_INVAL || *cache_ref < 0)
+			luaL_error(L, "Invalid cache request");
 		lua_rawgeti(L, LUA_REGISTRYINDEX, *cache_ref);
 		if((*cached = from_cache(*cache_ref, type, *cache_id)) > 0) {
 			lua_rawgeti(L, -1, *cached);

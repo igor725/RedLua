@@ -11,6 +11,7 @@
 #include "thirdparty\ScriptHook\inc\enums.h"
 
 #include "thirdparty\ScriptHook\inc\main.h"
+#include "settingsctl.hpp"
 
 #include "keyboard.h"
 
@@ -146,9 +147,9 @@ class MenuItemSwitchable : public MenuItemDefault
 {
 	bool	m_state;
 public:
-	MenuItemSwitchable(string caption)
+	MenuItemSwitchable(string caption, bool initial = false)
 		: MenuItemDefault(caption),
-		m_state(false) {}
+		m_state(initial) {}
 	virtual eMenuItemClass GetClass() { return eMenuItemClass::Switchable; }
 	virtual void OnDraw(float lineTop, float lineLeft, bool active);
 	virtual void OnSelect() { m_state = !m_state; }
@@ -218,7 +219,7 @@ class MenuInput
 public:
 	static bool MenuSwitchPressed()
 	{
-		return IsKeyJustUp(VK_F7);
+		return IsKeyJustUp(Settings.Read("menu_hotkey", VK_F7));
 	}
 	static MenuInputButtonState GetButtonState()
 	{

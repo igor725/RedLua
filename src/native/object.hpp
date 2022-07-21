@@ -12,25 +12,42 @@ static void push_uncached_lightobjectcopy
 	uint count = NOBJCOUNT_UNKNOWN
 ) {
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
-	NATIVEOBJECT_INITLIGHT(no, type, false, count, ptr);
+	NATIVEOBJECT_INITLIGHT(no, type, false, count, *ptr); // TODO: Поддержка больших типов (н.р векторов)
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 }
 
-static void push_cached_lightobjectcopy
+static void push_uncached_fullcopy
+(
+	lua_State *L,
+	NativeType type, NativeData *ptr,
+	uint count = 1
+) {
+	NativeTypeInfo nti = get_type_info(type);
+	// Считаем размер структуры NativeObjectHeader вместе с выравниванием
+	auto no = (NativeObject *)lua_newuserdata(L, NATIVEOBJECT_HDRSIZE + nti.size * count);
+	NATIVEOBJECT_INIT(no, type, false, false, count, 0);
+	luaL_setmetatable(L, LUANATIVE_OBJECT);
+	if(ptr)
+		memcpy(&no->content, ptr, nti.size * count);
+	else
+		memset(&no->content, 0, nti.size * count);
+}
+
+static void push_cached_lightobjectlink
 (
 	lua_State *L,
 	NativeType type, NativeData *ptr,
 	int cache_ref = -1, NativeCacheField cache_id = NATIVEDATA_INVAL
 ) {
 	int cached = 0;
-	if(search_in_cache(L, &cache_ref, &cache_id, type, (NativeData)ptr, &cached))
+	if(search_in_cache(L, &cache_ref, &cache_id, type, -1, &cached))
 		return;
 	
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
-	NATIVEOBJECT_INITLIGHT(no, type, false, 1, ptr);
+	NATIVEOBJECT_INITLIGHT(no, type, false, 1, *ptr);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 
-	save_to_cache(L, cache_ref, cache_id, type, (NativeData)ptr, cached);
+	save_to_cache(L, cache_ref, cache_id, type, -1, cached);
 }
 
 static void push_cached_fullobject
@@ -69,7 +86,7 @@ static int native_tostring(lua_State *L) {
 		return vector_tostring(L, no);
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
 
-	if(no->hdr.count > 1)
+	if(no->hdr.count != NOBJCOUNT_UNKNOWN && no->hdr.count > 1)
 		lua_pushfstring(L, "%s[%d]: %p", nti.name.c_str(), no->hdr.count, &no->content);
 	else if(no->hdr.isPointer)
 		lua_pushfstring(L, "%s*: %p", nti.name.c_str(), no->content.p);
@@ -144,7 +161,7 @@ static int native_index(lua_State *L) {
 	uint idx = (uint)luaL_checkinteger(L, 2);
 	luaL_argcheck(L, idx < no->hdr.count, 2, "out of bounds");
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
-	void *ptr = &(((char *)(&no->content))[idx * nti.size]);
+	auto ptr = (NativeData)&(((char *)(&no->content))[idx * nti.size]);
 	switch(no->hdr.type) {
 		case NTYPE_INT:
 		case NTYPE_HASH:
@@ -165,7 +182,7 @@ static int native_index(lua_State *L) {
 				create_luacache(L);
 				no->hdr.ownCache = luaL_ref(L, LUA_REGISTRYINDEX);
 			}
-			push_cached_lightobjectcopy(L, no->hdr.type, (NativeData *)ptr,
+			push_cached_lightobjectlink(L, no->hdr.type, &ptr,
 				no->hdr.ownCache, idx);
 			return 1;
 	}

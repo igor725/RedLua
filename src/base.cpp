@@ -1,8 +1,8 @@
 #include "base.hpp"
 #include "thirdparty\easyloggingpp.h"
 #include "redlua.hpp"
+#include "settingsctl.hpp"
 #include "menus\main.hpp"
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <map>
 
@@ -13,20 +13,18 @@ static BOOL HasConsole = false;
 bool ScanForNewScripts(void) {
 	LOG(INFO) << "Searching for scripts...";
 	WIN32_FIND_DATA findData;
-	HANDLE hFind = FindFirstFile("RedLua\\Scripts\\*.lua", &findData);
+	std::string scripts = "RedLua\\Scripts\\";
+	HANDLE hFind = FindFirstFile((scripts + "*.lua").c_str(), &findData);
 	if(hFind == INVALID_HANDLE_VALUE) return false;
+	bool autorun = Settings.Read("autorun", true);
 
 	do {
 		if(!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 			if(!Scripts[findData.cFileName]) {
-				LuaScript *script = new LuaScript(findData.cFileName);
-				std::string error;
+				LuaScript *script = new LuaScript(scripts + findData.cFileName);
 				Scripts[findData.cFileName] = script;
-
-				if(script->Load(error))
-					LOG(INFO) << "Script " << findData.cFileName << " loaded";
-				else
-					LOG(ERROR) << "Failed to load script " << error;
+				if(autorun) script->Load();
+				else LOG(INFO) << "Script " << script->GetPath() << " found but not loaded";
 			}
 		}
 	} while(FindNextFile(hFind, &findData));
@@ -73,10 +71,11 @@ void ScriptMain(void) {
 }
 
 void ScriptFinish(void) {
-	for(auto const & x : Scripts)
+	for(auto &x : Scripts)
 		delete x.second;
 
 	Scripts.clear();
+	Settings.Save();
 	LOG(INFO) << "RedLua stopped";
 	fclose(stderr); fclose(stdout);
 	if(HasConsole && !FreeConsole())

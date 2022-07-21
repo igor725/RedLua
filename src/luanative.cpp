@@ -6,16 +6,12 @@
 #include "native\types.hpp"
 #include "native\typemap.hpp"
 #include "native\call.hpp"
-#include "native\db.hpp"
-
-NativeNamespaces Natives;
+#include "nativedb.hpp"
 
 static int native_call(lua_State *L) {
-	if(Natives.size() == 0)
-		luaL_error(L, "Natives database is empty or was loaded incorrectly");
-	auto nspace = native_namespace(luaL_checkstring(L, 1));
+	auto nspace = Natives.GetNamespace(luaL_checkstring(L, 1));
 	luaL_argcheck(L, nspace != nullptr, 1, "Unknown namespace");
-	auto meth = native_method(nspace, luaL_checkstring(L, 2));
+	auto meth = Natives.GetMethod(nspace, luaL_checkstring(L, 2));
 	luaL_argcheck(L, meth != nullptr, 2, "Unknown method");
 
 	native_prepare(L, meth, lua_gettop(L) - 2);
@@ -23,9 +19,9 @@ static int native_call(lua_State *L) {
 }
 
 static int native_info(lua_State *L) {
-	auto nspace = native_namespace(luaL_checkstring(L, 1));
+	auto nspace = Natives.GetNamespace(luaL_checkstring(L, 1));
 	if(nspace == nullptr) return 0;
-	auto meth = native_method(nspace, luaL_checkstring(L, 2));
+	auto meth = Natives.GetMethod(nspace, luaL_checkstring(L, 2));
 	if(meth == nullptr) return 0;
 
 	lua_createtable(L, 0, 4);
@@ -55,26 +51,23 @@ static int native_info(lua_State *L) {
 }
 
 static int native_new(lua_State *L) {
+	lua_Integer count = luaL_checkinteger(L, 2);
+	luaL_argcheck(L, count > 0, 2, "count must be > 0");
 	std::string stype = luaL_checkstring(L, 1);
-	uint count = (uint)luaL_checkinteger(L, 2);
-	NativeType type = get_type(stype);
-	NativeTypeInfo nti = get_type_info(type);
+	auto type = get_type(stype);
+	NativeData *ptr = nullptr;
+	if(lua_type(L, 3) == 10/*LUA_TCDATA*/)
+		ptr = (NativeData *)lua_topointer(L, 3);
 
-	// Считаем размер структуры NativeObjectHeader вместе с выравниванием
-	size_t objsize = (sizeof(NativeObject) - sizeof(NativeData));
-	objsize += nti.size * count;
-	auto no = (NativeObject *)lua_newuserdata(L, objsize);
-	NATIVEOBJECT_INIT(no, type, false, false, count, 0);
-	luaL_setmetatable(L, LUANATIVE_OBJECT);
-	memset(&no->content, 0, nti.size * count);
+	push_uncached_fullcopy(L, type, ptr, (uint)count);
 	return 1;
 }
 
 #define VTN(idx) (float)lua_tonumber(L, idx)
 static int native_vector(lua_State *L) {
 	Vector3 pos {VTN(1), VTN(2), VTN(3)};
-
-	return 0;
+	push_uncached_fullcopy(L, NTYPE_VECTOR3, (NativeData *)&pos);
+	return 1;
 }
 
 #ifndef REDLUA_STANDALONE
@@ -109,10 +102,10 @@ static const luaL_Reg nativelib[] = {
 };
 
 int luaopen_native(lua_State *L) {
-	if(Natives.size() == 0) {
-		NativeReturn nret;
-		if((nret = native_reload()) != NLOAD_OK)
-			LOG(ERROR) << "Failed to load native.json: " << nret;
+	if(Natives.GetMethodCount() == 0) {
+		NativeDB::Returns ret;
+		if((ret = Natives.Load()) != NativeDB::Returns::NLOAD_OK)
+			LOG(ERROR) << "Failed to load native.json: " << ret;
 	}
 
 	call_init(L);
