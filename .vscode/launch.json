@@ -1,6 +1,18 @@
 {
 	"configurations": [
 		{
+			"name": "Run standalone",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "D:\\luajit\\src\\luajit.exe",
+			"args": ["test.lua"],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}\\objs\\output\\",
+			"environment": [],
+			"console": "integratedTerminal",
+			"preLaunchTask": "Build RedLua (Standalone)"
+		},
+		{
 			"name": "Attach game process",
 			"type": "cppvsdbg",
 			"request": "attach",

@@ -2,10 +2,10 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build RedLua",
+			"label": "Build RedLua (Standalone)",
 			"type": "shell",
 			"command": "build.bat",
-			"args": [],
+			"args": ["standalone"],
 			"group": "build",
 			"presentation": {
 				"reveal": "silent"

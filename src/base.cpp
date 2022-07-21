@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <map>
 
+#ifndef REDLUA_STANDALONE
 std::map <std::string, LuaScript *> Scripts {};
 static BOOL HasConsole = false;
 
@@ -81,3 +82,4 @@ void ScriptFinish(void) {
 	if(HasConsole && !FreeConsole())
 		LOG(ERROR) << "Failed to free console";
 }
+#endif

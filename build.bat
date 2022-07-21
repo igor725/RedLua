@@ -15,19 +15,35 @@ IF NOT EXIST "%RL_LUAJIT_SOURCE_DIR%\lua51.lib" (
 	POPD
 )
 SET RL_SCRIPTHOOK_SDK_DIR=.\src\thirdparty\ScriptHook
+SET RL_OUT_BIN=RedLua.asi
 SET RL_OUT_PATH="D:\SteamLibrary\steamapps\common\Red Dead Redemption 2"
+SET RL_LIBS=user32.lib shell32.lib lua51.lib
+SET RL_SOURCES=src\*.cpp
+SET RL_LDFLAGS=/dll /INCREMENTAL /LIBPATH:"%RL_LUAJIT_SOURCE_DIR%"
+SET RL_CFLAGS=/DELPP_NO_DEFAULT_LOG_FILE /DELPP_DISABLE_LOG_FILE_FROM_ARG /W2 ^
+/Isrc\ /EHsc /MP /MT /DLL /Foobjs\
+IF "%1"=="standalone" (
+	SET RL_OUT_PATH=".\objs\output"
+	SET RL_CFLAGS=/DREDLUA_STANDALONE /Zi /Fd!RL_OUT_PATH!\ /DEBUG !RL_CFLAGS!
+	SET RL_SOURCES=!RL_SOURCES! src\thirdparty\easyloggingpp.cpp
+	SET RL_LDFLAGS=/NOENTRY !RL_LDFLAGS!
+	SET RL_OUT_BIN=RedLua.dll	
+) ELSE (
+	SET RL_LIBS=!RL_LIBS! ScriptHookRDR2.lib
+	SET RL_SOURCES=!RL_SOURCES! src\thirdparty\*.cpp src\menus\*.cpp
+	SET RL_LDFLAGS=!RL_LDFLAGS! /LIBPATH:"!RL_SCRIPTHOOK_SDK_DIR!\lib"
+)
 MKDIR ".\objs\" 2> NUL
 IF NOT EXIST !RL_OUT_PATH! (
 	SET RL_OUT_PATH=".\objs\output"
 	MKDIR !RL_OUT_PATH! 2> NUL
 )
-IF NOT EXIST "!RL_OUT_PATH!\lua51.dll" (
+IF NOT "%1"=="standalone" IF NOT EXIST "!RL_OUT_PATH!\lua51.dll" (
 	COPY %RL_LUAJIT_SOURCE_DIR%\lua51.dll %RL_OUT_PATH% 2> NUL
 )
-SET RL_CFLAGS=/DELPP_NO_DEFAULT_LOG_FILE /DELPP_DISABLE_LOG_FILE_FROM_ARG /W2 ^
-/Isrc\ /EHsc /MP /MT /DLL /Foobjs\ /Fe!RL_OUT_PATH!\RedLua.asi
-SET RL_LDFLAGS=/INCREMENTAL /LIBPATH:"%RL_LUAJIT_SOURCE_DIR%" /LIBPATH:"%RL_SCRIPTHOOK_SDK_DIR%\lib" /dll
-SET RL_LIBS=ScriptHookRDR2.lib user32.lib shell32.lib lua51.lib
-SET RL_SOURCES=src\*.cpp src\thirdparty\*.cpp src\menus\*.cpp
-CL %RL_CFLAGS% %RL_SOURCES% /link %RL_LDFLAGS% %RL_LIBS%
+CL !RL_CFLAGS! /Fe!RL_OUT_PATH!\!RL_OUT_BIN! !RL_SOURCES! /link !RL_LDFLAGS! !RL_LIBS!
+IF NOT "%ERRORLEVEL%"=="0" (
+	endlocal
+	EXIT /b 1
+)
 endlocal

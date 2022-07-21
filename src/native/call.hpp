@@ -1,117 +1,143 @@
 #pragma once
 
+#ifndef REDLUA_STANDALONE
 #include "thirdparty\ScriptHook\inc\nativeCaller.h"
+#else
+#include "thirdparty\easyloggingpp.h"
+
+static void nativeInit(UINT64 hash) {
+	LOG(INFO) << "[NC] START " << (void *)hash;
+}
+
+template <typename T>
+static inline void nativePush(T val) {
+	UINT64 val64 = 0;
+	if (sizeof(T) > sizeof(UINT64)) {
+		throw "error, value size > 64 bit";
+	}
+	*reinterpret_cast<T *>(&val64) = val;
+	LOG(INFO) << "\t [NC] Argument: " << (void *)val64;
+}
+
+static PUINT64 nativeCall() {
+	static UINT64 natret = 0;
+	LOG(INFO) << "[NC] END";
+	return &natret;
+}
+#endif
+
 #include "thirdparty\ScriptHook\inc\types.h"
 
 #include "native\db.hpp"
 #include "native\cache.hpp"
 #include "native\object.hpp"
 
-#define IS_PTR_OF(t1, ti1, t2, ti2) (ti1.isPointer && (((t1) - (t2)) == 1 || ((t1) - (ti2).superType) == 1))
+static int native_prepare_arg_error(lua_State *L, NativeParam *param, int idx) {
+	static std::string ptr[] = {"*", ""};
+	return luaL_typerror(L, idx,
+		(get_type_info(param->type).name + ptr[param->isPointer]).c_str());
+}
 
-static void native_prepare_arg(lua_State *L, int idx, NativeType extype, PUINT64 val) {
-	union {
-		float f;
-		UINT64 u64;
-	} c;
+#define IS_TYPES_EQU(AT, A, BT) ((AT) == (BT) || (A).superType == (BT))
 
-	if(extype == NTYPE_UNKNOWN || extype == NTYPE_ANY) {
-		float temp;
-		switch(lua_type(L, idx)) {
-			case LUA_TNUMBER: // Немного костыльно определяем, че передаём, целое число или же плавающее
-				temp = (float)lua_tonumber(L, idx);
-				extype = temp == (int)temp ? NTYPE_INT : NTYPE_FLOAT;
-				break;
-			case LUA_TBOOLEAN:
-				extype = NTYPE_BOOL;
-				break;
-			case LUA_TSTRING:
-				*val = (UINT64)lua_tostring(L, idx);
-				return;
-			case LUA_TUSERDATA:
-				extype = NTYPE_ANY;
-				break;
-			default:
-				extype = NTYPE_VOID;
-				break;
-		}
-	} else if(extype == NTYPE_ANYPTR && lua_type(L, idx) == 10) { // В "Any*" передана LUA_TCDATA
-		*val = (UINT64)lua_topointer(L, idx);
-		return;
-	}
-
-	switch(extype) {
-		case NTYPE_INT:
-		case NTYPE_HASH:
-			*val = luaL_checkinteger(L, idx);
-			return;
-		case NTYPE_FLOAT:
-			c.f = (float)luaL_checknumber(L, idx);
-			*val = c.u64;
-			return;
-		case NTYPE_BOOL:
-			*val = lua_toboolean(L, idx);
-			return;
-		case NTYPE_STRING:
-			*val = (UINT64)luaL_checkstring(L, idx);
-			return;
-	}
-
+static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
 	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
-	NativeTypeInfo &nti_obj = get_type_info(no->hdr.type),
-	&nti_exp = get_type_info(extype);
-	luaL_argcheck(L, !nti_exp.isPointer || !no->hdr.readonly, idx,
-		"attempt to push an readonly object as a pointer");
+	auto nti_no = get_type_info(no->hdr.type);
 
-	if(extype != no->hdr.type && (extype < NTYPE_ANY || extype > NTYPE_ANYPTR)) {
-		if(extype != nti_obj.superType && nti_exp.superType != nti_obj.superType
-		&& !IS_PTR_OF(extype, nti_exp, no->hdr.type, nti_obj))
-			luaL_error(L, "bad argument #%d (%s expected, got %s)",
-				idx, nti_exp.name.c_str(), nti_obj.name.c_str());
+	if(IS_TYPES_EQU(no->hdr.type, nti_no, param->type)) {
+		if(param->isPointer == no->hdr.isPointer)
+			return (nativePush(no->content.nd), 1);
+		else if(param->isPointer)
+			return (nativePush(&no->content.nd), 1);
+		else
+			return native_prepare_arg_error(L, param, idx);
+	}
 
-		if(nti_exp.isPointer)
-			*val = (UINT64)&no->hash.u64;
-		else *val = no->hash.u64;
-	} else if(nti_exp.isPointer)
-		*val = (UINT64)&no->hash.u64;
-	else *val = no->hash.u64;
+	return 0;
+}
+
+static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
+	float temp;
+
+	switch(lua_type(L, idx)) {
+		case LUA_TNIL:
+			if(param->isPointer)
+				return (nativePush(nullptr), 1);
+			break;
+		case LUA_TBOOLEAN:
+			if(param->type == NTYPE_BOOL && !param->isPointer)
+				return (nativePush(lua_toboolean(L, idx)), 1);
+
+			break;
+		case LUA_TNUMBER:
+			if(!param->isPointer) {
+				temp = (float)lua_tonumber(L, idx);
+				if(temp == (int)temp && param->type == NTYPE_FLOAT)
+					return (nativePush(temp), 1);
+				else if(param->type == NTYPE_INT)
+					return (nativePush((int)temp), 1);
+			}
+			break;
+		case LUA_TSTRING:
+			if(param->type == NTYPE_CHAR && param->isPointer /*&&param->isConst*/)
+				return (nativePush(lua_tostring(L, idx)), 1);
+			break;
+		case LUA_TUSERDATA:
+			return native_prepare_nobj(L, param, vector_allowed, idx);
+		case 10/*LUA_TCDATA*/:
+			if(param->type == NTYPE_ANY && param->isPointer)
+				return (nativePush(lua_topointer(L, idx)), 1);
+			break;
+	}
+
+	return native_prepare_arg_error(L, param, idx);
 }
 
 static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 	int methargs = (int)meth->params.size(), idx = 3;
 	int iend = (meth->isVararg && (nargs > methargs)) ? nargs : methargs;
 	nativeInit(meth->hash);
-	for(int i = 0; i < iend; i++, idx++) {
+	for(int i = 0; i < iend; idx++) {
 		if(i >= nargs) luaL_error(L, "insufficient arguments (%d expected, got %d)", iend, i);
-		NativeType extype = (i < methargs) ? meth->params[i].type : NTYPE_UNKNOWN;
-		// Осуществляем подмену трёх float значения на вектор, если нужно
-		if(extype == NTYPE_FLOAT && methargs - i >= 3) {
-			if(meth->params[i + 1].type == NTYPE_FLOAT
-			&& meth->params[i + 2].type == NTYPE_FLOAT) {
-				auto vec = (PUINT64)to_vector(L, idx);
-				if(vec != nullptr) {
-					for(int j = 0; j < 3; j++, i++)
-						nativePush(vec[j]);
-					continue;
-				}
-			}
-		}
-
-		if(extype != NTYPE_VECTOR3) {
-			UINT64 value;
-			native_prepare_arg(L, idx, extype, &value);
-			nativePush(value);
-		} else {
-			auto vec = (PUINT64)check_vector(L, idx);
-			for(int j = 0; j < 3; j++)
-				nativePush(vec[j]);
-		}
+		bool vector_allowed = (methargs - i >= 3) && meth->params[i].type == NTYPE_FLOAT &&
+			meth->params[i + 1].type == NTYPE_FLOAT && meth->params[i + 2].type == NTYPE_FLOAT;
+		i += native_prepare_arg(L, (i < methargs ? &meth->params[i] : nullptr), vector_allowed, idx);
 	}
 }
 
 static int native_perform(lua_State *L, NativeMeth *meth) {
-	// TODO: Ещё какая-нибудь фигня???
-	return push_value(L, meth->ret, nativeCall());
+	PUINT64 ret = nativeCall();
+	if(meth->returns == NTYPE_VOID || meth->returns == NTYPE_UNKNOWN)
+		return 0;
+
+	if(!meth->isRetPtr) {
+		switch(meth->returns) {
+			case NTYPE_INT:
+			case NTYPE_ANY:
+			case NTYPE_HASH:
+				lua_pushinteger(L, *ret);
+				break;
+			
+			case NTYPE_FLOAT:
+				lua_pushnumber(L, *(float *)ret);
+				break;
+			
+			case NTYPE_BOOL:
+				lua_pushboolean(L, *(int *)ret);
+				break;
+			
+			case NTYPE_CHAR:
+				lua_pushlstring(L, (char *)ret, 1);
+				break;
+			
+			default:
+				push_cached_fullobject(L, meth->returns, (NativeData)*ret);
+				break;
+		}
+	} else
+		push_uncached_lightobjectcopy(L, meth->returns, ret);
+
+	return 1;
 }
 
 static int generic_newindex(lua_State *L) {
@@ -125,14 +151,9 @@ static int meth_call(lua_State *L) {
 	lua_rawgeti(L, 1, mt_top);
 	lua_pushnil(L);
 	lua_rawseti(L, 1, mt_top);
-	lua_rawgeti(L, 2, 2);
-	lua_rawgeti(L, -1, mt_top);
-	lua_pushnil(L);
-	lua_rawseti(L, -3, mt_top);
-	NativeMeth *_meth = native_search(lua_tostring(L, -1), lua_tostring(L, -3));
-	if(!_meth) luaL_error(L, "Method not found");
-	native_prepare(L, _meth, nargs - 2);
-	return native_perform(L, _meth);
+	auto meth = (NativeMeth *)lua_touserdata(L, -1);
+	native_prepare(L, meth, nargs - 2);
+	return native_perform(L, meth);
 }
 
 static const luaL_Reg methmeta[] = {
@@ -145,8 +166,20 @@ static const luaL_Reg methmeta[] = {
 static int nspace_index(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TSTRING);
 	lua_rawgeti(L, 1, 1);
-	lua_pushvalue(L, 2);
-	lua_rawseti(L, -2, (int)lua_objlen(L, -2) + 1);
+	int mt_top = (int)lua_objlen(L, -1) + 1;
+	lua_rawgeti(L, 1, 2);
+	lua_rawgeti(L, -1, mt_top);
+	auto meth = native_method(
+		(NativeNamespace *)lua_touserdata(L, -1),
+		lua_tostring(L, 2)
+	);
+	if(meth == nullptr) {
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushlightuserdata(L, meth);
+	lua_rawseti(L, -4, mt_top);
+	lua_pop(L, 2);
 	return 1;
 }
 
@@ -161,12 +194,15 @@ static int global_index(lua_State *L) {
 	lua_pushvalue(L, 2);
 	lua_rawget(L, LUA_GLOBALSINDEX);
 	if(lua_isnil(L, -1) && lua_type(L, 2) == LUA_TSTRING) {
+		auto nspace = native_namespace(lua_tostring(L, 2));
+		if(nspace == nullptr) return 1; // Возвращаем тот nil, что нам дал rawget выше
+
 		lua_pop(L, 1);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ReferenceMap[L].ns);
 		lua_rawgeti(L, -1, 1);
 		int mt_top = (int)lua_objlen(L, -1) + 1;
 		lua_rawgeti(L, -2, 2);
-		lua_pushvalue(L, 2);
+		lua_pushlightuserdata(L, nspace);
 		lua_rawseti(L, -2, mt_top);
 		lua_pop(L, 2);
 	}

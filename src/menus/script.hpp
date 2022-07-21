@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef REDLUA_STANDALONE
 #include "thirdparty\scriptmenu.h"
 
 class MenuScripts : public MenuBase {
@@ -13,3 +14,4 @@ public:
 };
 
 MenuScripts *CreateScriptsList(MenuController *controller);
+#endif

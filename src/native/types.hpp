@@ -8,102 +8,60 @@ typedef enum _NativeType : int {
 	NTYPE_UNKNOWN = -1,
 	NTYPE_VOID,
 	NTYPE_INT,
-	NTYPE_INTPTR,
 	NTYPE_FLOAT,
-	NTYPE_FLOATPTR,
 	NTYPE_BOOL,
-	NTYPE_BOOLPTR,
-	NTYPE_CHARPTR,
-	NTYPE_STRING,
+	NTYPE_CHAR,
 	NTYPE_ANY,
-	NTYPE_ANYPTR,
 	NTYPE_BLIP,
-	NTYPE_BLIPPTR,
 	NTYPE_CAM,
-	NTYPE_CAMPTR,
 	NTYPE_ENTITY,
-	NTYPE_ENTITYPTR,
 	NTYPE_FIREID,
-	NTYPE_FIREIDPTR,
 	NTYPE_HASH,
-	NTYPE_HASHPTR,
 	NTYPE_INTERIOR,
-	NTYPE_INTERIORPTR,
 	NTYPE_ITEMSET,
-	NTYPE_ITEMSETPTR,
 	NTYPE_OBJECT,
-	NTYPE_OBJECTPTR,
 	NTYPE_PED,
-	NTYPE_PEDPTR,
 	NTYPE_PICKUP,
-	NTYPE_PICKUPPTR,
 	NTYPE_PLAYER,
-	NTYPE_PLAYERPTR,
 	NTYPE_SCRHANDLE,
-	NTYPE_SCRHANDLEPTR,
 	NTYPE_VECTOR3,
-	NTYPE_VECTOR3PTR,
 	NTYPE_VEHICLE,
-	NTYPE_VEHICLEPTR,
 	NTYPE_ANIMSCENE,
-	NTYPE_ANIMSCENEPTR,
 	NTYPE_PERSCHAR,
-	NTYPE_PERSCHARPTR,
 	NTYPE_POPZONE,
-	NTYPE_POPZONEPTR,
 	NTYPE_PROMPT,
-	NTYPE_PROMPTPTR,
 	NTYPE_PROPSET,
-	NTYPE_PROPSETPTR,
-	NTYPE_VOLUME,
-	NTYPE_VOLUMEPTR
+	NTYPE_VOLUME
 } NativeType;
 
+typedef long long NativeCacheField;
 typedef unsigned long long NativeData;
-#define NATIVEDATA_INVAL ((NativeData)-1)
+#define NATIVEDATA_INVAL ((NativeCacheField)-1)
+#define NATIVECACHE_DISABLE ((int)-2)
 
 typedef struct _NativeParam {
 	NativeType type;
 	std::string name;
+	bool isPointer;
 } NativeParam;
 
 typedef std::map<int, NativeParam> NativeParams;
 
 typedef struct _NativeMeth {
 	UINT64 hash;
-	NativeType ret;
+	NativeType returns;
 	NativeParams params;
 	long firstSeen;
 	bool isVararg;
+	bool isRetPtr;
+	bool isRetConst;
 } NativeMeth;
 
 typedef struct _NativeTypeInfo {
 	NativeType superType;
-	bool isPointer;
 	uint size;
 	std::string name;
 } NativeTypeInfo;
-
-typedef struct _NativeObjectHeader {
-	NativeType type;
-	UINT size;
-	int owncache, readonly;
-} NativeObjectHeader;
-
-#define NATHDR_INIT(H, T, S, R) ((H).type = (NativeType)(T), (H).size = (UINT)(S),\
-	(H).owncache = 0, (H).readonly = R)
-#define NATHDR_SZ sizeof(NativeObjectHeader)
-
-typedef struct _NativeObject {
-	NativeObjectHeader hdr;
-	union {
-		int i32;
-		UINT64 u64;
-		PUINT64 pu64;
-		const void *cp;
-		void *p;
-	} hash;
-} NativeObject;
 
 typedef std::map<std::string, NativeMeth> NativeNamespace;
 typedef std::map<std::string, NativeNamespace> NativeNamespaces;
@@ -125,3 +83,39 @@ static NativeType get_type(std::string& name) {
 
 	return NTYPE_UNKNOWN;
 }
+
+typedef struct _NativeObjectHeader {
+	NativeType type;
+	bool isPointer;
+	bool isReadOnly;
+	int ownCache;
+	uint count;
+} NativeObjectHeader;
+
+typedef struct _NativeObject {
+	NativeObjectHeader hdr;
+	union _NativeContent {
+		int i32;
+		void *p;
+		NativeData nd;
+	} content;
+} NativeObject;
+
+typedef struct _NativeVector {
+	NativeObjectHeader hdr;
+	Vector3 content;
+} NativeVector;
+
+#define NATIVEOBJECT_INIT(X, T, P, R, C, D) (X)->hdr.type = (T), \
+	(X)->hdr.isPointer = (P), (X)->hdr.isReadOnly = (R), \
+	(X)->hdr.count = (C), (X)->content.nd = (D), \
+	(X)->hdr.ownCache = 0
+
+#define NATIVEOBJECT_INITLIGHT(X, T, R, C, D) (X)->hdr.type = (T), \
+	(X)->hdr.isPointer = true, (X)->hdr.isReadOnly = (R), \
+	(X)->hdr.count = (C), (X)->content.p = (D), \
+	(X)->hdr.ownCache = 0
+
+#define NATIVEOBJECT_GETPTR(X) ((X)->hdr.isPointer ? (X)->content.p : &(X)->content.i32)
+
+#define NOBJCOUNT_UNKNOWN ((uint)-1)

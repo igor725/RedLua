@@ -47,7 +47,11 @@ static NativeReturn native_reload(void) {
 					std::string temp;
 					NativeMeth& _meth = _nmeths[nmeth["name"].get_to(temp)];
 					if(get_jstring(nmeth["return_type"], temp)) {
-						if((_meth.ret = get_type(temp)) == NTYPE_UNKNOWN)
+						if(_meth.isRetPtr = (temp.find("*") != std::string::npos))
+							temp.pop_back();
+						if(_meth.isRetConst = (temp.find("const ") == 0))
+							temp.erase(0, 6);
+						if((_meth.returns = get_type(temp)) == NTYPE_UNKNOWN)
 							return NLOAD_METHOD_INVALID_RETURN_TYPE;
 					} else return NLOAD_METHOD_NONSTRING_RETURN_TYPE;
 
@@ -66,8 +70,12 @@ static NativeReturn native_reload(void) {
 								break;
 							}
 							NativeParam& _param = _params[argn++];
-							_param.type = get_type(temp);
-							if(_param.type == -1) return NLOAD_METHOD_PARAM_INVALID_TYPE;
+							if(_param.isPointer = (temp.find("*") != std::string::npos))
+								temp.pop_back();
+							if(temp.find("const ") == 0)
+								temp.erase(0, 6);
+							if((_param.type = get_type(temp)) == NTYPE_UNKNOWN)
+								return NLOAD_METHOD_PARAM_INVALID_TYPE;
 							if(!get_jstring(inmparam["name"], _param.name))
 								return NLOAD_METHOD_PARAM_NONSTRING_NAME;
 						}
@@ -82,11 +90,14 @@ static NativeReturn native_reload(void) {
 	return NLOAD_OK;
 }
 
-static NativeMeth *native_search(std::string nspace, std::string meth) {
+static NativeNamespace *native_namespace(std::string nspace) {
 	if(Natives.find(nspace) == Natives.end())
 		return nullptr;
-	if(Natives[nspace].find(meth) == Natives[nspace].end())
-		return nullptr;
+	return &Natives[nspace];
+}
 
-	return &Natives[nspace][meth];
+static NativeMeth *native_method(NativeNamespace *nspace, std::string meth) {
+	if((*nspace).find(meth) == (*nspace).end())
+		return nullptr;
+	return &(*nspace)[meth];
 }

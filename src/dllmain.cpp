@@ -7,6 +7,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
+#ifndef REDLUA_STANDALONE
 	switch(reason) {
 		case DLL_PROCESS_ATTACH:
 			if(!EnsureDirectory("RedLua")
@@ -25,6 +26,6 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 			ScriptFinish();
 			break;
 	}
-
+#endif
 	return TRUE;
 }

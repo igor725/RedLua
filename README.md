@@ -43,6 +43,7 @@ Native functions that expect a parameter of type `Any *` as an argument can take
 ```lua
 -- This script will display an in-game toast notification for 2 seconds when F8 key is released
 local t = {}
+local ffi = require'ffi'
 
 function t.OnTick()
 	if misc.iskeyjustup(VK_F8, true) then
@@ -94,14 +95,12 @@ NativeObject:topointer()
 native.call('PLAYER', 'PLAYER_ID') -- Faster
 PLAYER:PLAYER_ID() -- Simpler, but uses a lot of metacalls
 
--- Get the information abot the function
+-- Get the information about the function
 native.info('BUILTIN', 'WAIT') -- Returns: {hash = '0x4EDE34FBADD967A6', build = 1207, returns = 'void', params = {[1] = {type = 'int', name = 'ms'}}} or nothing if specified function does not exists
 
 -- Create new typed array
 native.new('Vehicle', 5) -- Returns: NativeObject of 5 Vehicles
-
--- Create new vector
-native.vector(13.37, 66.6, 12.3) -- Returns: NativeVector, can be used in functions like ENTITY:GET_ENTITY_MATRIX(...)
+native.new('Vector3', 4) -- Returns: NativeVector, can be used in functions like ENTITY:GET_ENTITY_MATRIX(...)
 
 -- Get all world objects
 native.allobjects(objects_typed_array) -- Returns: objects count
