@@ -71,10 +71,10 @@ void ScriptMain(void) {
 }
 
 void ScriptFinish(void) {
-	for(auto &x : Scripts)
-		delete x.second;
-
-	Scripts.clear();
+	for (auto it = Scripts.begin(); it != Scripts.end();) {
+		delete it->second;
+		it = Scripts.erase(it);
+	}
 	Settings.Save();
 	LOG(INFO) << "RedLua stopped";
 	fclose(stderr); fclose(stdout);

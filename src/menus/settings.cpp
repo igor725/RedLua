@@ -57,8 +57,8 @@ public:
 class MenuItemUnloadAll : public MenuItemDefault {
 	virtual void OnSelect() {
 		SetStatusText("All scripts were unloaded");
-		for(std::map<std::string, LuaScript *>::iterator it = Scripts.begin(); it != Scripts.end();) {
-			delete (*it).second;
+		for (auto it = Scripts.begin(); it != Scripts.end();) {
+			delete it->second;
 			it = Scripts.erase(it);
 		}
 	}

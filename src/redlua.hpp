@@ -4,6 +4,8 @@
 #include "thirdparty\luajit\src\lua.hpp"
 #include "thirdparty\easyloggingpp.h"
 
+#include "luanative.hpp"
+
 extern const luaL_Reg redlibs[];
 
 static int log_print(lua_State *L) {
@@ -91,6 +93,7 @@ class LuaScript {
 			if(LookForFunc("OnStop"))
 				CallFunc(0, 0);
 
+			luaclose_native(L);
 			lua_close(L);
 		}
 
