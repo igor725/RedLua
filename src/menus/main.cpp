@@ -20,7 +20,7 @@ public:
 
 class MenuItemUpdates : public MenuItemDefault {
 	virtual void OnSelect() {
-		if(ScanForNewScripts())
+		if(RedLuaScanScripts())
 			SetStatusText("Scripts list updated");
 		else
 			SetStatusText("Failed to iterate scripts directory");

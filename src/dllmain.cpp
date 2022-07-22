@@ -1,14 +1,11 @@
 #include "dllmain.hpp"
 #include "base.hpp"
 #include "thirdparty\keyboard.h"
-#include "thirdparty\easyloggingpp.h"
 #include "thirdparty\ScriptHook\inc\main.h"
 
-INITIALIZE_EASYLOGGINGPP
-
-BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
+BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 #ifndef REDLUA_STANDALONE
-	switch(reason) {
+	switch(dwReason) {
 		case DLL_PROCESS_ATTACH:
 			if(!EnsureDirectory("RedLua")
 			|| !EnsureDirectory("RedLua\\Scripts")
@@ -17,15 +14,16 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved) {
 			|| !EnsureDirectory("RedLua\\Libs\\C"))
 				break;
 
-			scriptRegister(hInstance, ScriptMain);
+			scriptRegister(hInstance, RedLuaMain);
 			keyboardHandlerRegister(OnKeyboardMessage);
 			break;
 		case DLL_PROCESS_DETACH:
 			scriptUnregister(hInstance);
 			keyboardHandlerUnregister(OnKeyboardMessage);
-			ScriptFinish();
+			RedLuaFinish();
 			break;
 	}
 #endif
+
 	return TRUE;
 }

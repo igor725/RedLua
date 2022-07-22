@@ -10,7 +10,7 @@
 std::map <std::string, LuaScript *> Scripts {};
 static BOOL HasConsole = false;
 
-bool ScanForNewScripts(void) {
+bool RedLuaScanScripts(void) {
 	LOG(INFO) << "Searching for scripts...";
 	WIN32_FIND_DATA findData;
 	std::string scripts = "RedLua\\Scripts\\";
@@ -19,7 +19,7 @@ bool ScanForNewScripts(void) {
 	bool autorun = Settings.Read("autorun", true);
 
 	do {
-		if(!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+		if(findData.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY) {
 			if(!Scripts[findData.cFileName]) {
 				LuaScript *script = new LuaScript(scripts + findData.cFileName);
 				Scripts[findData.cFileName] = script;
@@ -33,10 +33,12 @@ bool ScanForNewScripts(void) {
 	return true;
 }
 
-void ScriptMain(void) {
-	el::Configurations conf("RedLua\\log.conf");
+void RedLuaMain(void) {
+	el::Configurations conf ("RedLua\\Log.conf");
 	el::Loggers::reconfigureLogger("default", conf);
-	if(el::Loggers::getLogger("default")->typedConfigurations()->toStandardOutput(el::Level::Global)) {
+	el::base::TypedConfigurations *logger;
+	logger = el::Loggers::getLogger("default")->typedConfigurations();
+	if(logger->enabled(el::Level::Global) && logger->toStandardOutput(el::Level::Global)) {
 		bool alloced = false;
 		if(AttachConsole(ATTACH_PARENT_PROCESS) || (alloced = AllocConsole()) == true) {
 			if(alloced) SetConsoleTitle("RedLua debug console");
@@ -48,7 +50,7 @@ void ScriptMain(void) {
 
 	LOG(INFO) << "Logger initialized";
 	srand(GetTickCount());
-	ScanForNewScripts();
+	RedLuaScanScripts();
 
 	auto menuController = new MenuController();
 	auto mainMenu = CreateMainMenu(menuController);
@@ -73,7 +75,7 @@ void ScriptMain(void) {
 	}
 }
 
-void ScriptFinish(void) {
+void RedLuaFinish(void) {
 	for (auto it = Scripts.begin(); it != Scripts.end();) {
 		delete it->second;
 		it = Scripts.erase(it);

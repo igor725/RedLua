@@ -6,6 +6,6 @@
 
 extern std::map <std::string, LuaScript *> Scripts;
 
-void ScriptMain(void);
-void ScriptFinish(void);
-bool ScanForNewScripts(void);
+void RedLuaMain(void);
+void RedLuaFinish(void);
+bool RedLuaScanScripts(void);

@@ -39,8 +39,6 @@ static int native_prepare_arg_error(lua_State *L, NativeParam *param, int idx) {
 	).c_str());
 }
 
-#define IS_TYPES_EQU(AT, A, BT) ((AT) == (BT) || (A).superType == (BT))
-
 static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
 	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
 
@@ -51,7 +49,7 @@ static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_all
 		return 3;
 	}
 	
-	if(!param || IS_TYPES_EQU(no->hdr.type, get_type_info(no->hdr.type), param->type)) {
+	if(!param || IS_NATIVETYPES_EQU(no->hdr.type, get_type_info(no->hdr.type), param->type)) {
 		if(param ? (param->isPointer == no->hdr.isPointer) : no->hdr.isPointer)
 			return (nativePush(no->content.nd), 1);
 		else if(!param || param->isPointer)

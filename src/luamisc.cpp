@@ -1,9 +1,10 @@
 #include "redlua.hpp"
+
+#ifndef REDLUA_STANDALONE
 #include "luamisc.hpp"
 #include "thirdparty\keyboard.h"
 #include "thirdparty\ScriptHook\inc\main.h"
-
-static lua_Number GameVer = 0000.00;
+static lua_Number GameVer;
 
 static const char *KeyNames[] = {
 	NULL, "VK_LBUTTON", "VK_RBUTTON", "VK_CANCEL", "VK_MBUTTON",
@@ -52,7 +53,6 @@ static const char *KeyNames[] = {
 	"VK_ZOOM", "VK_NONAME", "VK_PA1", "VK_OEM_CLEAR", NULL
 };
 
-#ifndef REDLUA_STANDALONE
 static int misc_iskeydown(lua_State *L) {
 	lua_pushboolean(L, IsKeyDown((DWORD)luaL_checkinteger(L, 1)));
 	return 1;
@@ -77,6 +77,7 @@ static int misc_gamever(lua_State *L) {
 	lua_pushnumber(L, GameVer);
 	return 1;
 }
+
 static luaL_Reg misclib[] = {
 	{"iskeydown", misc_iskeydown},
 	{"iskeydownlong", misc_iskeydownlong},
@@ -107,14 +108,13 @@ int luaopen_misc(lua_State *L) {
 		case VER_1_0_1311_12_RGS: GameVer = 1311.12; break;
 		case VER_1_0_1436_25_RGS: GameVer = 1436.25; break;
 		case VER_1_0_1436_31_RGS: GameVer = 1436.31; break;
+		default: GameVer = -1.0; break;
 	}
 
 	luaL_newlib(L, misclib);
 	return 1;
 }
 #else
-int luaopen_misc(lua_State *L) {
-	lua_pushnil(L);
-	return 1;
-}
+// nullsub
+int luaopen_misc(lua_State *L) {return 0;}
 #endif

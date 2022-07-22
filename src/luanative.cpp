@@ -55,6 +55,7 @@ static int native_new(lua_State *L) {
 	luaL_argcheck(L, count > 0, 2, "count must be > 0");
 	std::string stype = luaL_checkstring(L, 1);
 	auto type = get_type(stype);
+	luaL_argcheck(L, type != NTYPE_UNKNOWN, 1, "invalid type");
 	NativeData *ptr = nullptr;
 	if(lua_type(L, 3) == 10/*LUA_TCDATA*/)
 		ptr = (NativeData *)lua_topointer(L, 3);

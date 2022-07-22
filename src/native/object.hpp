@@ -67,10 +67,18 @@ static void push_cached_fullobject
 	save_to_cache(L, cache_ref, cache_id, type, id, cached);
 }
 
-static int native_topointer(lua_State *L) {
-	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	lua_pushlightuserdata(L, NATIVEOBJECT_GETPTR(no));
-	return 1;
+static NativeObject *native_check(lua_State *L, int idx, NativeType type) {
+	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
+	NativeTypeInfo &nti_got = get_type_info(no->hdr.type);
+	if(!IS_NATIVETYPES_EQU(no->hdr.type, nti_got, type)) {
+		NativeTypeInfo &nti_exp = get_type_info(type);
+		auto msg = lua_pushfstring(L, "%s expected, got %s",
+		nti_exp.name.c_str(), nti_got.name.c_str());
+		luaL_argerror(L, idx, msg);
+		return nullptr;
+	}
+
+	return no;
 }
 
 static int vector_tostring(lua_State *L, NativeObject *no) {
@@ -80,24 +88,7 @@ static int vector_tostring(lua_State *L, NativeObject *no) {
 	return 1;
 }
 
-static int native_tostring(lua_State *L) {
-	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	if(no->hdr.type == NTYPE_VECTOR3  && no->hdr.count == 1)
-		return vector_tostring(L, no);
-	NativeTypeInfo &nti = get_type_info(no->hdr.type);
-
-	if(no->hdr.count != NOBJCOUNT_UNKNOWN && no->hdr.count > 1)
-		lua_pushfstring(L, "%s[%d]: %p", nti.name.c_str(), no->hdr.count, &no->content);
-	else if(no->hdr.isPointer)
-		lua_pushfstring(L, "%s*: %p", nti.name.c_str(), no->content.p);
-	else
-		lua_pushfstring(L, "%s: %d", nti.name.c_str(), no->content.i32);
-
-	return 1;
-}
-
 static int vector_newindex(lua_State *L, NativeObject *no, char idx) {
-	if(no->hdr.type != NTYPE_VECTOR3) return 0;
 	auto nv = (Vector3 *)NATIVEOBJECT_GETPTR(no);
 
 	switch(idx) {
@@ -116,14 +107,6 @@ static int vector_newindex(lua_State *L, NativeObject *no, char idx) {
 			nv->z = (float)luaL_checknumber(L, 3);
 			break;
 	}
-
-	return 0;
-}
-
-static int native_newindex(lua_State *L) {
-	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	if(lua_type(L, 2) == LUA_TSTRING)
-		return vector_newindex(L, no, *lua_tostring(L, 2));
 
 	return 0;
 }
@@ -147,6 +130,62 @@ static int vector_index(lua_State *L, NativeObject *no, char idx) {
 		case 'Z':
 			lua_pushnumber(L, nv->z);
 			return 1;
+	}
+
+	return 0;
+}
+
+static int native_topointer(lua_State *L) {
+	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
+	lua_pushlightuserdata(L, NATIVEOBJECT_GETPTR(no));
+	return 1;
+}
+
+static int native_tostring(lua_State *L) {
+	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
+	if(no->hdr.type == NTYPE_VECTOR3  && no->hdr.count == 1)
+		return vector_tostring(L, no);
+	NativeTypeInfo &nti = get_type_info(no->hdr.type);
+
+	if(no->hdr.count != NOBJCOUNT_UNKNOWN && no->hdr.count > 1)
+		lua_pushfstring(L, "%s[%d]: %p", nti.name.c_str(), no->hdr.count, &no->content);
+	else if(no->hdr.isPointer)
+		lua_pushfstring(L, "%s*: %p", nti.name.c_str(), no->content.p);
+	else
+		lua_pushfstring(L, "%s: %d", nti.name.c_str(), no->content.i32);
+
+	return 1;
+}
+
+static int native_newindex(lua_State *L) {
+	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
+	if(lua_type(L, 2) == LUA_TSTRING && no->hdr.type == NTYPE_VECTOR3)
+		return vector_newindex(L, no, *lua_tostring(L, 2));
+	uint idx = (uint)luaL_checkinteger(L, 2);
+	luaL_argcheck(L, idx < no->hdr.count, 2, "out of bounds");
+	NativeTypeInfo &nti = get_type_info(no->hdr.type);
+	auto ptr = &(((char *)(&no->content))[idx * nti.size]);
+
+	switch(no->hdr.type) {
+		case NTYPE_INT:
+		case NTYPE_HASH:
+		case NTYPE_ANY:
+			*(int *)ptr = (int)luaL_checkinteger(L, 3);
+			break;
+
+		default:
+			switch(lua_type(L, 3)) {
+				case LUA_TUSERDATA:
+					memcpy(ptr, NATIVEOBJECT_GETPTR(native_check(L, 3, no->hdr.type)), nti.size);
+					break;
+				case 10/*LUA_TCDATA*/:
+					memcpy(ptr, lua_topointer(L, 3), nti.size);
+					break;
+				default:
+					luaL_typerror(L, 3, (nti.name + " or cdata").c_str());
+					break;
+			}
+			break;
 	}
 
 	return 0;
