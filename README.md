@@ -7,8 +7,7 @@ RedLua is a ScriptHookRDR2 library that simplifies the game modding process.
 Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder. **Note that the RedLua won't work without the [ScriptHookRDR2](https://www.dev-c.com/rdr2/scripthookrdr2/) library!**
 
 ## Usage
-Press F7 to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
-
+Press **F7** (hotkey can be modified in the `Settings.json` file, keycodes can be found [here](https://cherrytree.at/misc/vk.htm)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
 
 ## Scripting
 
@@ -58,10 +57,10 @@ function t.OnTick()
 
 		local data = ffi.new([[
 			struct {
-				uint64_t _offset;
+				uint64_t weird_padding_again;
 				const char *title;
 				const char *text;
-				uint64_t _offset2;
+				uint64_t god_another_unknown_field;
 				uint64_t iconDict;
 				uint64_t icon;
 				uint64_t iconColor;
@@ -83,6 +82,7 @@ return t
 ```
 
 Here is a list of all the Lua functions provided by the RedLua library:
+
 ```lua
 --[[
 	Library: native
@@ -130,7 +130,7 @@ misc.gamever() -- Returns: number, e.g. 1436.31
 
 ## Thanks
 
-Thanks to [Mike Pall](https://github.com/LuaJIT/LuaJIT), [Alexander Blade](https://www.dev-c.com/rdr2/scripthookrdr2/), [alloc8or](https://github.com/alloc8or/rdr3-nativedb-data) and [Niels Lohmann](https://github.com/nlohmann/json) for all their awesome work.
+Thanks to [Mike Pall](https://github.com/LuaJIT/LuaJIT), [Alexander Blade](https://www.dev-c.com/rdr2/scripthookrdr2/), [alloc8or](https://github.com/alloc8or/rdr3-nativedb-data), [Niels Lohmann](https://github.com/nlohmann/json) and [abumusamq](https://github.com/amrayn/easyloggingpp) for all their awesome work.
 
 ## License
 
