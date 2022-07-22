@@ -43,6 +43,7 @@ jobs:
       - name: Build release archive
         run: |
           mkdir .\objs\output\RedLua\
+          copy LICENSE README.md .\objs\output\
           curl.exe -o.\objs\output\RedLua\natives.json https://raw.githubusercontent.com/alloc8or/rdr3-nativedb-data/master/natives.json
           7z.exe a -tzip .\objs\out.zip .\objs\output\*.* -r
 

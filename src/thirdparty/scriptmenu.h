@@ -174,7 +174,7 @@ const int
 
 const float
 	MenuBase_menuTop  = 0.05f,
-	MenuBase_menuLeft = 0.0f,
+	MenuBase_menuLeft[] = {0.00f, 0.39f, 0.78f},
 	MenuBase_lineOverlap = 1.0f / 40.0f;
 
 class MenuBase
@@ -189,7 +189,8 @@ class MenuBase
 public:
 	MenuBase(MenuItemTitle *itemTitle)
 		: m_itemTitle(itemTitle),
-		  m_activeLineIndex(0), m_activeScreenIndex(0) {}
+		  m_activeLineIndex(0),
+		  m_activeScreenIndex(0) {}
 	~MenuBase()
 	{
 		for each (auto item in m_items)
@@ -246,6 +247,7 @@ class MenuController
 	vector<MenuBase *>		m_menuStack;
 
 	DWORD	m_inputTurnOnTime;
+	DWORD   m_currentMenuPosition;
 
 	string	m_statusText;
 	DWORD	m_statusTextMaxTicks;
@@ -275,12 +277,16 @@ class MenuController
 	}
 public:
 	MenuController()
-		: m_inputTurnOnTime(0), m_statusTextMaxTicks(0) {}
+		: m_inputTurnOnTime(0),
+		  m_statusTextMaxTicks(0),
+		  m_currentMenuPosition(0) {}
 	~MenuController()
 	{
 		for each (auto menu in m_menuList)
 			delete menu;
 	}
+	DWORD GetCurrentPosition()    	{	return m_currentMenuPosition; }
+	void SetCurrentPosition(DWORD v) { m_currentMenuPosition = v % 3; }
 	bool HasActiveMenu()			{	return m_menuStack.size() > 0; }
 	void PushMenu(MenuBase *menu)	{	if (IsMenuRegistered(menu)) m_menuStack.push_back(menu); }
 	void PopMenu()					{   if (m_menuStack.size()) { m_menuStack.back()->OnPop(); m_menuStack.pop_back(); } }

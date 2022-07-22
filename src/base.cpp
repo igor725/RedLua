@@ -52,6 +52,9 @@ void ScriptMain(void) {
 
 	auto menuController = new MenuController();
 	auto mainMenu = CreateMainMenu(menuController);
+	menuController->SetCurrentPosition(
+		Settings.Read("menu_position", 0)
+	);
 
 	while(true) {
 		if(MenuInput::MenuSwitchPressed()) {

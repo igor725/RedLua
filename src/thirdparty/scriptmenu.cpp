@@ -88,7 +88,7 @@ void MenuItemMenu::OnSelect()
 void MenuBase::OnDraw()
 {
 	float lineTop = MenuBase_menuTop;
-	float lineLeft = MenuBase_menuLeft;
+	float lineLeft = MenuBase_menuLeft[m_controller->GetCurrentPosition()];
 	if (m_itemTitle->GetClass() == eMenuItemClass::ListTitle)
 		reinterpret_cast<MenuItemListTitle *>(m_itemTitle)->
 			SetCurrentItemInfo(GetActiveItemIndex() + 1, static_cast<int>(m_items.size()));

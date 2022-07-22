@@ -1,10 +1,10 @@
 # Lua scripting mod for Red Dead Redemption 2
 
-RedLua is a ScriptHookRDR2 library that simplifies the process of modifying the game.
+RedLua is a ScriptHookRDR2 library that simplifies the game modding process.
 
 ## Installation
 
-Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder.
+Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder. **Note that the RedLua won't work without the [ScriptHookRDR2](https://www.dev-c.com/rdr2/scripthookrdr2/) library!**
 
 ## Usage
 Press F7 to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
@@ -12,7 +12,7 @@ Press F7 to open the RedLua menu. Here you can load/reload/stop/unload scripts, 
 
 ## Scripting
 
-RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\` folder. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`.
+RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`.
 
 Example:
 ```lua
@@ -88,7 +88,7 @@ Here is a list of all the Lua functions provided by the RedLua library:
 	Library: native
 ]]
 
--- Cast native object to poimter
+-- Cast NativeObject to a pointer (useful for ffi)
 NativeObject:topointer()
 
 -- Invoke the native function
@@ -127,3 +127,11 @@ misc.resetkey(VK_*)
 -- Get game version
 misc.gamever() -- Returns: number, e.g. 1436.31
 ```
+
+## Thanks
+
+Thanks to [Mike Pall](https://github.com/LuaJIT/LuaJIT), [Alexander Blade](https://www.dev-c.com/rdr2/scripthookrdr2/), [alloc8or](https://github.com/alloc8or/rdr3-nativedb-data) and [Niels Lohmann](https://github.com/nlohmann/json) for all their awesome work.
+
+## License
+
+RedLua is released under the MIT License. This license excludes files in the `src\thirdparty` folder that may be distributed under another license. Please read the `LICENSE` file for more information.

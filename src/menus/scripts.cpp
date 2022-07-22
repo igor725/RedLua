@@ -1,6 +1,6 @@
 #include "base.hpp"
 #include "redlua.hpp"
-#include "menus\script.hpp"
+#include "menus\scripts.hpp"
 
 class MenuScript : public MenuBase {
 	virtual void OnPop() {
@@ -8,14 +8,14 @@ class MenuScript : public MenuBase {
 	}
 
 private:
-	LuaScript *_script;
+	LuaScript *m_script;
 
 public:
 	MenuScript(MenuItemTitle *title, LuaScript *script)
-		: MenuBase(title) { _script = script; }
+		: MenuBase(title), m_script(script) {}
 
 	virtual LuaScript *GetScript(void) {
-		return _script;
+		return m_script;
 	}
 };
 
@@ -34,16 +34,16 @@ public:
 
 class MenuItemUsage : public MenuItemDefault {
 	virtual std::string GetCaption(void) {
-		return MenuItemDefault::GetCaption() + _usage + " KB";
+		return MenuItemDefault::GetCaption() + m_usage + " KB";
 	}
 
 	virtual void OnSelect(void) {
 		LuaScript *scr = ((MenuScript *)GetMenu())->GetScript();
-		_usage = std::to_string(scr->GetMemoryUsage());
+		m_usage = std::to_string(scr->GetMemoryUsage());
 	}
 
 private:
-	std::string _usage = "[press to update]";
+	std::string m_usage = "[press to update]";
 
 public:
 	MenuItemUsage(std::string title)
@@ -97,7 +97,7 @@ public:
 
 class MenuItemScript : public MenuItemDefault {
 	virtual void OnSelect() {
-		auto menu = new MenuScript(new MenuItemTitle(this->GetCaption()), _script);
+		auto menu = new MenuScript(new MenuItemTitle(this->GetCaption()), script);
 		auto controller = GetMenu()->GetController();
 		controller->RegisterMenu(menu);
 
@@ -111,11 +111,11 @@ class MenuItemScript : public MenuItemDefault {
 	}
 
 private:
-	LuaScript *_script;
+	LuaScript *script;
 
 public:
 	MenuItemScript(std::string name, LuaScript *script)
-		: MenuItemDefault(name) { _script = script; }
+		: MenuItemDefault(name), script(script) {}
 };
 
 MenuScripts *CreateScriptsList(MenuController *controller) {

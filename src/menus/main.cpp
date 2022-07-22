@@ -1,6 +1,6 @@
 #include "thirdparty\scriptmenu.h"
 #include "menus\settings.hpp"
-#include "menus\script.hpp"
+#include "menus\scripts.hpp"
 #include "menus\about.hpp"
 #include "base.hpp"
 
