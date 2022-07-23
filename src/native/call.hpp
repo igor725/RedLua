@@ -20,9 +20,10 @@ static inline void nativePush(T val) {
 }
 
 static PUINT64 nativeCall() {
-	static UINT64 natret = 0;
+	// Самый большой из имеющихся типов, чтобы наверняка
+	static Vector3 natret = {0};
 	LOG(INFO) << "[NC] END";
-	return &natret;
+	return (PUINT64)&natret;
 }
 #endif
 
@@ -49,7 +50,10 @@ static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_all
 		return 3;
 	}
 	
-	if(!param || IS_NATIVETYPES_EQU(no->hdr.type, get_type_info(no->hdr.type), param->type)) {
+	NativeTypeInfo &nti_obj = get_type_info(no->hdr.type),
+	&nti_param = get_type_info(param->type);
+
+	if(!param || IS_NATIVETYPES_EQU(param->type, nti_param, no->hdr.type, nti_obj)) {
 		if(param ? (param->isPointer == no->hdr.isPointer) : no->hdr.isPointer)
 			return (nativePush(no->content.nd), 1);
 		else if(!param || param->isPointer)
@@ -79,7 +83,7 @@ static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allo
 				temp = (float)lua_tonumber(L, idx);
 				if(param->type == NTYPE_FLOAT)
 					return (nativePush(temp), 1);
-				else if(param->type == NTYPE_INT)
+				else if(param->type == NTYPE_INT || param->type == NTYPE_HASH)
 					return (nativePush((int)temp), 1);
 			}
 			break;
@@ -103,7 +107,7 @@ static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 	int iend = (meth->isVararg && (nargs > methargs)) ? nargs : methargs;
 	nativeInit(meth->hash);
 	for(int i = 0; i < iend; idx++) {
-		if(i >= nargs) luaL_error(L, "insufficient arguments (%d expected, got %d)", iend, i);
+		if((idx - nargs) == 3) luaL_error(L, "insufficient arguments (%d expected, got %d)", iend, i);
 		bool vector_allowed = (methargs - i >= 3) && meth->params[i].type == NTYPE_FLOAT &&
 			meth->params[i + 1].type == NTYPE_FLOAT && meth->params[i + 2].type == NTYPE_FLOAT;
 		i += native_prepare_arg(L, (i < methargs ? &meth->params[i] : nullptr), vector_allowed, idx);

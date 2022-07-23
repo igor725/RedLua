@@ -120,6 +120,6 @@ typedef struct _NativeVector {
 
 #define NATIVEOBJECT_GETPTR(X) ((X)->hdr.isPointer ? (X)->content.p : &(X)->content.i32)
 #define NATIVEOBJECT_HDRSIZE (sizeof(NativeObject) - sizeof(NativeData))
-#define IS_NATIVETYPES_EQU(AT, A, BT) ((AT) == (BT) || (A).superType == (BT))
+#define IS_NATIVETYPES_EQU(AT, AI, BT, BI) (((AT) == (BT)) || ((AT) == (BI).superType) || ((AI).superType == (BT)))
 
 #define NOBJCOUNT_UNKNOWN ((uint)-1)
