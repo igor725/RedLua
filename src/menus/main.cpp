@@ -2,6 +2,7 @@
 #include "menus\settings.hpp"
 #include "menus\scripts.hpp"
 #include "menus\about.hpp"
+#include "constants.hpp"
 #include "base.hpp"
 
 class MenuItemScripts : public MenuItemDefault {
@@ -32,7 +33,7 @@ public:
 };
 
 MenuBase *CreateMainMenu(MenuController *controller) {
-	auto menu = new MenuBase(new MenuItemTitle("RedLua"));
+	auto menu = new MenuBase(new MenuItemTitle(REDLUA_FULLNAME));
 	controller->RegisterMenu(menu);
 
 	menu->AddItem(new MenuItemScripts("Scripts"));

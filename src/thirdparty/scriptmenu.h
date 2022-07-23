@@ -6,11 +6,12 @@
 
 #pragma once
 
-#include "thirdparty\ScriptHook\inc\natives.h"
 #include "thirdparty\ScriptHook\inc\types.h"
 #include "thirdparty\ScriptHook\inc\enums.h"
 
 #include "thirdparty\ScriptHook\inc\main.h"
+
+#include "natives.h"
 #include "settingsctl.hpp"
 
 #include "keyboard.h"
@@ -235,8 +236,8 @@ public:
 	}
 	static void MenuInputBeep()
 	{
-		AUDIO::STOP_SOUND_FRONTEND("NAV_RIGHT", "HUD_SHOP_SOUNDSET");
-		AUDIO::PLAY_SOUND_FRONTEND("NAV_RIGHT", "HUD_SHOP_SOUNDSET", 1, 0);
+		NATIVES::STOP_SOUND_FRONTEND("NAV_RIGHT", "HUD_SHOP_SOUNDSET");
+		NATIVES::PLAY_SOUND_FRONTEND("NAV_RIGHT", "HUD_SHOP_SOUNDSET", 1, 0);
 	}
 };
 
@@ -249,18 +250,13 @@ class MenuController
 	DWORD	m_inputTurnOnTime;
 	DWORD   m_currentMenuPosition;
 
-	string	m_statusText;
-	DWORD	m_statusTextMaxTicks;
-
 	void InputWait(int ms)		{	m_inputTurnOnTime = GetTickCount() + ms; }
 	bool InputIsOnWait()		{	return m_inputTurnOnTime > GetTickCount(); }
 	MenuBase *GetActiveMenu()	{	return m_menuStack.size() ? m_menuStack[m_menuStack.size() - 1] : NULL; }
-	void DrawStatusText();
 	void OnDraw()
 	{
 		if (auto menu = GetActiveMenu())
 			menu->OnDraw();
-		DrawStatusText();
 	}
 	void OnInput()
 	{
@@ -278,7 +274,6 @@ class MenuController
 public:
 	MenuController()
 		: m_inputTurnOnTime(0),
-		  m_statusTextMaxTicks(0),
 		  m_currentMenuPosition(0) {}
 	~MenuController()
 	{
@@ -291,7 +286,7 @@ public:
 	void PushMenu(MenuBase *menu)	{	if (IsMenuRegistered(menu)) m_menuStack.push_back(menu); }
 	void PopMenu()					{   if (m_menuStack.size()) { m_menuStack.back()->OnPop(); m_menuStack.pop_back(); } }
 	void PopMenu(size_t count)      {   if(count == 0) count = m_menuStack.size(); for(size_t i = 0; i < count; i++) PopMenu(); }
-	void SetStatusText(string text, int ms) { m_statusText = text, m_statusTextMaxTicks = GetTickCount() + ms; }
+	void SetStatusText(string text, int ms) { NATIVES::NOTIFY(1, ms, text.c_str()); }
 	bool IsMenuRegistered(MenuBase *menu)
 	{
 		for (size_t i = 0; i < m_menuList.size(); i++)

@@ -4,7 +4,7 @@ $DOMAIN = "http://www.dev-c.com"
 $LINK = "/rdr2/scripthookrdr2/"
 $FILES = @(
 	"inc/", "lib/",
-	"inc/enums.h", "inc/main.h", "inc/nativeCaller.h", "inc/natives.h",
+	"inc/enums.h", "inc/main.h", "inc/nativeCaller.h",
 	"inc/types.h", "lib/ScriptHookRDR2.lib", "readme.txt"
 )
 $PATCHES = @{
