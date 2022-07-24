@@ -15,3 +15,15 @@ public:
 	MenuItemLink(string caption, string link)
 		: MenuItemDefault(caption), m_link(link) {}
 };
+
+class MenuTemporary : public MenuBase
+{
+	virtual void OnPop(void)
+	{
+		delete this;
+	}
+
+public:
+	MenuTemporary(MenuItemTitle *title)
+		: MenuBase(title) {}
+};

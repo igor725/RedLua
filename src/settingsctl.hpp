@@ -1,7 +1,6 @@
 #pragma once
 
 #include "thirdparty\json.hpp"
-#include "thirdparty\easyloggingpp.h"
 
 #include <fstream>
 #include <string>
@@ -25,7 +24,7 @@ public:
 		std::ifstream jfile(m_file);
 		if(jfile.is_open()) {
 			if(!(m_data = nlohmann::json::parse(jfile, nullptr, false)).is_discarded())
-				if(m_modified = !m_data.is_object()) m_data.clear();
+				if(m_modified = !m_data.is_object()) m_data = {}; // Очищаем невалидный конфиг
 			jfile.close();
 
 			return true;

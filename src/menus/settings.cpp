@@ -79,7 +79,7 @@ MenuBase *CreateSettings(MenuController *controller) {
 	controller->RegisterMenu(menu);
 
 	menu->AddItem(new MenuItemSSwitch("Autorun feature enabled", "autorun", Settings.Read("autorun", true)));
-	menu->AddItem(new MenuItemSSwitch("Check for updates at startup", "updates", Settings.Read("updates", false)));
+	menu->AddItem(new MenuItemSSwitch("Check for updates at startup", "auto_updates", Settings.Read("auto_updates", false)));
 	menu->AddItem(new MenuItemReloadDB("Reload NativeDB"));
 	menu->AddItem(new MenuItemMenu("Change menu position", CreatePositionMenu(controller)));
 	menu->AddItem(new MenuItemToggleAll("Toggle all scripts"));

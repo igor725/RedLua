@@ -7,8 +7,6 @@
 #include "native\call.hpp"
 #include "nativedb.hpp"
 
-#include "thirdparty\easyloggingpp.h"
-
 static int native_call(lua_State *L) {
 	auto nspace = Natives.GetNamespace(luaL_checkstring(L, 1));
 	luaL_argcheck(L, nspace != nullptr, 1, "Unknown namespace");
@@ -110,12 +108,6 @@ void luaclose_native(lua_State *L) {
 }
 
 int luaopen_native(lua_State *L) {
-	if(Natives.GetMethodCount() == 0) {
-		NativeDB::Returns ret;
-		if((ret = Natives.Load()) != NativeDB::Returns::NLOAD_OK)
-			LOG(ERROR) << "Failed to load " REDLUA_NATIVES_FILE ": " << ret;
-	}
-
 	call_init(L);
 	nativeobj_init(L);
 	luaL_newlib(L, nativelib);

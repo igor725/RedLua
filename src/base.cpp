@@ -1,7 +1,10 @@
 #include "base.hpp"
 #include "redlua.hpp"
+#include "nativedb.hpp"
 #include "settingsctl.hpp"
+#include "updatesctl.hpp"
 #include "menus\main.hpp"
+#include "menus\updalert.hpp"
 #include "constants.hpp"
 
 #include "thirdparty\easyloggingpp.h"
@@ -51,14 +54,34 @@ void RedLuaMain(void) {
 	}
 
 	LOG(INFO) << "Logger initialized";
-	srand(GetTickCount());
-	RedLuaScanScripts();
-
 	auto menuController = new MenuController();
 	auto mainMenu = CreateMainMenu(menuController);
 	menuController->SetCurrentPosition(
 		Settings.Read("menu_position", 0)
 	);
+	LOG(DEBUG) << "RedLua menu initialized";
+
+	if(Settings.Read("auto_updates", false)) {
+		LOG(DEBUG) << "Starting updates checker...";
+		std::string data;
+		if(UpdatesCtl.CheckRedLua(data))
+			CreateUpdateAlert(menuController, data);
+		else
+			LOG(DEBUG) << "RedLua updater: " << data;
+		if(UpdatesCtl.CheckNativeDB(data))
+			LOG(INFO) << "NativeDB updated successfully";
+		else
+			LOG(DEBUG) << "NativeDB updater: " << data;
+		LOG(DEBUG) << "Updates checker finished";
+	}
+
+	if(Natives.GetMethodCount() == 0) {
+		NativeDB::Returns ret;
+		if((ret = Natives.Load()) != NativeDB::Returns::NLOAD_OK)
+			LOG(ERROR) << "Failed to load " REDLUA_NATIVES_FILE ": " << ret;
+	}
+
+	RedLuaScanScripts();
 
 	while(true) {
 		if(MenuInput::MenuSwitchPressed()) {

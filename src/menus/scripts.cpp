@@ -118,8 +118,8 @@ public:
 		: MenuItemDefault(name), script(script) {}
 };
 
-MenuScripts *CreateScriptsList(MenuController *controller) {
-	auto menu = new MenuScripts(new MenuItemTitle("Scripts list"));
+MenuTemporary *CreateScriptsList(MenuController *controller) {
+	auto menu = new MenuTemporary(new MenuItemTitle("Scripts list"));
 	controller->RegisterMenu(menu);
 
 	if(Scripts.size() > 0) {
