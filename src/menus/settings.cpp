@@ -1,6 +1,7 @@
 #include "thirdparty\scriptmenu.h"
 #include "menus\settings.hpp"
 #include "menus\position.hpp"
+#include "menus\updates.hpp"
 #include "settingsctl.hpp"
 #include "nativedb.hpp"
 #include "base.hpp"
@@ -74,11 +75,12 @@ MenuBase *CreateSettings(MenuController *controller) {
 	controller->RegisterMenu(menu);
 
 	menu->AddItem(new MenuItemAutorun("Autorun feature enabled", Settings.Read("autorun", true)));
-	menu->AddItem(new MenuItemReloadDB("Reload native database"));
+	menu->AddItem(new MenuItemReloadDB("Reload NativeDB"));
 	menu->AddItem(new MenuItemMenu("Change menu position", CreatePositionMenu(controller)));
 	menu->AddItem(new MenuItemToggleAll("Toggle all scripts"));
 	menu->AddItem(new MenuItemReloadAll("Reload all scripts"));
 	menu->AddItem(new MenuItemUnloadAll("Unload all scripts"));
+	menu->AddItem(new MenuItemMenu("Check for updates", CreateUpdatesMenu(controller)));
 
 	return menu;
 }

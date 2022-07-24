@@ -34,6 +34,14 @@ public:
 		return false;
 	}
 
+	std::string &Read(std::string name, std::string &def) {
+		if(m_data[name].is_string())
+			m_data[name].get_to(def);
+		else
+			Write(name, def);
+		return def;
+	}
+
 	int Read(std::string name, int def) {
 		if(m_data[name].is_number())
 			m_data[name].get_to(def);
