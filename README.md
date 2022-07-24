@@ -68,6 +68,12 @@ Native functions that expect a parameter of type `Any *` as an argument can take
 local t = {}
 local ffi = require'ffi'
 
+function t.OnLoad()
+	t.me = PLAYER:PLAYER_ID()
+	t.me_ent = PLAYER:GET_PLAYER_PED(t.me)
+	t.ent_arr = native.new('Entity', 1024)
+end
+
 function t.OnTick()
 	if misc.iskeyjustup(VK_F8, true) then
 		local duration = ffi.new([[
@@ -102,10 +108,11 @@ function t.OnTick()
 	end
 	-- If you press F9 it will knock out all peds around you
 	if mish.iskeyjustup(VK_F9, true) then
-		local cnt = native.allpeds(mod.ent_arr) - 1
+		local cnt = native.allpeds(t.ent_arr) - 1
 		for i = 0, cnt do
-			if mod.ent_arr[i] ~= mod.me_ent then
-				TASK:TASK_KNOCKED_OUT(mod.ent_arr[i], 10, false)
+			if t.ent_arr[i] ~= t.me_ent then
+				TASK:CLEAR_PED_TASKS(t.ent_arr[i], false, false)
+				TASK:TASK_KNOCKED_OUT(t.ent_arr[i], 10, false)
 			end
 		end
 	end
@@ -114,7 +121,7 @@ end
 return t
 ```
 
-Here is a list of all the Lua functions provided by the RedLua library:
+Here is a list of all the Lua functions provided by RedLua:
 
 ```lua
 --[[
