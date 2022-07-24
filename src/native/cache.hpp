@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thirdparty\luajit\src\lua.hpp"
+#include "thirdparty\LuaJIT\src\lua.hpp"
 #include "native\types.hpp"
 #include <map>
 

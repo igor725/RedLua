@@ -4,7 +4,7 @@
 			"name": "Run standalone",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "D:\\luajit\\src\\luajit.exe",
+			"program": "D:\\LuaJIT\\src\\LuaJIT.exe",
 			"args": ["sl_test.lua"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}\\objs\\output\\",

@@ -4,7 +4,7 @@ IF NOT "%VSCMD_ARG_TGT_ARCH%"=="x64" (
 	EXIT /B 1
 )
 setlocal enableextensions enabledelayedexpansion
-SET RL_LUAJIT_SOURCE_DIR=.\src\thirdparty\luajit\src
+SET RL_LUAJIT_SOURCE_DIR=.\src\thirdparty\LuaJIT\src
 IF NOT EXIST "%RL_LUAJIT_SOURCE_DIR%\lua51.lib" (
 	PUSHD %RL_LUAJIT_SOURCE_DIR%
 	CALL .\msvcbuild.bat

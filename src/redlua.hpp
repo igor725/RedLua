@@ -4,7 +4,7 @@
 #include "constants.hpp"
 
 #include <string>
-#include "thirdparty\luajit\src\lua.hpp"
+#include "thirdparty\LuaJIT\src\lua.hpp"
 #include "thirdparty\easyloggingpp.h"
 
 extern const luaL_Reg redlibs[];

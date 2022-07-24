@@ -35,7 +35,7 @@ RedLua uses the [**Easylogging++**](https://github.com/amrayn/easyloggingpp#conf
 
 ## Scripting
 
-RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`.
+RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`. Almost every function of the RDR2's RAGE is described [here](https://alloc8or.re/rdr3/nativedb/) and [here](https://www.rdr2mods.com/nativedb/index/builtin/).
 
 Example:
 ```lua
@@ -100,6 +100,15 @@ function t.OnTick()
 
 		UIFEED:_UI_FEED_POST_SAMPLE_TOAST(duration, data, true, true)
 	end
+	-- If you press F9 it will knock out all peds around you
+	if mish.iskeyjustup(VK_F9, true) then
+		local cnt = native.allpeds(mod.ent_arr) - 1
+		for i = 0, cnt do
+			if mod.ent_arr[i] ~= mod.me_ent then
+				TASK:TASK_KNOCKED_OUT(mod.ent_arr[i], 10, false)
+			end
+		end
+	end
 end
 
 return t
@@ -150,7 +159,14 @@ misc.resetkey(VK_*)
 
 -- Get game version
 misc.gamever() -- Returns: number, e.g. 1436.31
+
+-- Get RedLua version
+misc.libver() -- Returns: integer, e.g. 010, 020, etc.
 ```
+
+## Contribution
+
+This is my first project that uses C++, so I'm not really good at it. If you see some cursed code and you know how to improve it, PRs are welcome.
 
 ## Thanks
 

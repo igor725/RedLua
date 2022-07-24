@@ -2,6 +2,8 @@
 
 #ifndef REDLUA_STANDALONE
 #include "luamisc.hpp"
+#include "constants.hpp"
+
 #include "thirdparty\keyboard.h"
 #include "thirdparty\ScriptHook\inc\main.h"
 static lua_Number GameVer;
@@ -78,6 +80,11 @@ static int misc_gamever(lua_State *L) {
 	return 1;
 }
 
+static int misc_libver(lua_State *L) {
+	lua_pushinteger(L, REDLUA_VERSION_NUM);
+	return 1;
+}
+
 static luaL_Reg misclib[] = {
 	{"iskeydown", misc_iskeydown},
 	{"iskeydownlong", misc_iskeydownlong},
@@ -85,6 +92,7 @@ static luaL_Reg misclib[] = {
 	{"resetkey", misc_resetkey},
 
 	{"gamever", misc_gamever},
+	{"libver", misc_libver},
 
 	{NULL, NULL}
 };
