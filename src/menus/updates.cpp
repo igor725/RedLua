@@ -37,29 +37,18 @@ static struct {
 } curl;
 
 static bool load_curl(void) {
-	if(curl.lib) return true;
-
-	for(int i = 0; liblist[i]; i++) {
+	for(int i = 0; !curl.lib && liblist[i]; i++) {
 		curl.lib = LoadLibraryA(liblist[i]);
-		if(!curl.lib) continue;
-
-		for(int j = 0; symlist[j]; j++) {
+		for(int j = 0; curl.lib && symlist[j]; j++) {
 			if((((void**)&curl)[j + 1] = GetProcAddress(curl.lib, symlist[j])) == NULL) {
 				FreeLibrary(curl.lib);
 				curl.lib = NULL;
 				break;
 			}
 		}
-
-		if(curl.lib) break;
 	}
 
 	return curl.lib != NULL;
-}
-
-static size_t __stdcall write_string(char *ptr, size_t sz, size_t nmemb, void *ud) {
-	*(static_cast<std::string*>(ud)) += std::string{ptr, sz * nmemb};
-	return sz * nmemb;
 }
 
 class MenuUpdatePrompt : public MenuBase {
@@ -80,6 +69,11 @@ static const std::string errors[] = {
 };
 
 class MenuItemUpdateRL : public MenuItemDefault {
+	static size_t __stdcall write_string(char *ptr, size_t sz, size_t nmemb, void *ud) {
+		*(static_cast<std::string*>(ud)) += std::string{ptr, sz * nmemb};
+		return sz * nmemb;
+	}
+
 	virtual void OnSelect(void) {
 		if(!load_curl()) {
 			SetStatusText(errors[0]);
@@ -148,8 +142,11 @@ public:
 class MenuItemUpdateDB : public MenuItemDefault {
 	static size_t etag_extract(char *ptr, size_t sz, size_t nmemb, void *ud) {
 		size_t out = sz * nmemb;
-		if(out > 10 && _strnicmp(ptr, "etag: ", 6) == 0)
-			*(std::string *)ud = std::string{ptr + 6, out - 8};
+		if(out > 10 && _strnicmp(ptr, "etag: ", 6) == 0) {
+			std::string *str = (std::string *)ud;
+			// Вот такой вот странный, но действенный способ обрезать символы \r\n
+			*str = std::string{ptr + 6, out - (ptr[out - 2] == '\r' ? 8 : (ptr[out - 1] == '\n' ? 7 : 6))};
+		}
 
 		return out;
 	}
@@ -160,10 +157,9 @@ class MenuItemUpdateDB : public MenuItemDefault {
 			return;
 		}
 
-		auto fpath = "RedLua\\natives.json";
-		FILE *file = fopen(fpath, "r+");
-		if(!file && (file = fopen(fpath, "w")) == NULL) {
-			SetStatusText("Failed to open natives.json file!");
+		FILE *file = fopen(REDLUA_NATIVES_FILE, "r+");
+		if(!file && (file = fopen(REDLUA_NATIVES_FILE, "w")) == NULL) {
+			SetStatusText("Failed to open " REDLUA_NATIVES_FILE " file!");
 			return;
 		}
 
@@ -193,7 +189,7 @@ class MenuItemUpdateDB : public MenuItemDefault {
 				Settings.Write("nativedb_etag", "W/" + etag);
 				SetStatusText("NativeDB updated, please hit \"Reload NativeDB\" button to apply changes!");
 			} else if(resp == 304)
-				SetStatusText("You have the latest version of NativeDB");
+				SetStatusText("You already have the latest version of NativeDB");
 			else
 				SetStatusText(errors[2] + std::to_string(resp));
 		} else

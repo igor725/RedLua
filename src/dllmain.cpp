@@ -1,5 +1,7 @@
 #include "dllmain.hpp"
 #include "base.hpp"
+#include "constants.hpp"
+
 #include "thirdparty\keyboard.h"
 #include "thirdparty\ScriptHook\inc\main.h"
 
@@ -7,11 +9,10 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 #ifndef REDLUA_STANDALONE
 	switch(dwReason) {
 		case DLL_PROCESS_ATTACH:
-			if(!EnsureDirectory("RedLua")
-			|| !EnsureDirectory("RedLua\\Scripts")
-			|| !EnsureDirectory("RedLua\\Logs")
-			|| !EnsureDirectory("RedLua\\Libs")
-			|| !EnsureDirectory("RedLua\\Libs\\C"))
+			if(!EnsureDirectory(REDLUA_ROOT_DIR)
+			|| !EnsureDirectory(REDLUA_SCRIPTS_DIR)
+			|| !EnsureDirectory(REDLUA_LIBS_DIR)
+			|| !EnsureDirectory(REDLUA_CLIBS_DIR))
 				break;
 
 			scriptRegister(hInstance, RedLuaMain);

@@ -1,8 +1,10 @@
 #include "base.hpp"
-#include "thirdparty\easyloggingpp.h"
 #include "redlua.hpp"
 #include "settingsctl.hpp"
 #include "menus\main.hpp"
+#include "constants.hpp"
+
+#include "thirdparty\easyloggingpp.h"
 #include <windows.h>
 #include <map>
 
@@ -11,20 +13,20 @@ std::map <std::string, LuaScript *> Scripts {};
 static BOOL HasConsole = false;
 
 bool RedLuaScanScripts(void) {
-	LOG(INFO) << "Searching for scripts...";
+	LOG(INFO) << "Searching for new scripts...";
 	WIN32_FIND_DATA findData;
-	std::string scripts = "RedLua\\Scripts\\";
-	HANDLE hFind = FindFirstFile((scripts + "*.lua").c_str(), &findData);
+	std::string scpath = REDLUA_SCRIPTS_DIR;
+	HANDLE hFind = FindFirstFile((scpath + "*.lua").c_str(), &findData);
 	if(hFind == INVALID_HANDLE_VALUE) return false;
 	bool autorun = Settings.Read("autorun", true);
 
 	do {
 		if(findData.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY) {
 			if(!Scripts[findData.cFileName]) {
-				LuaScript *script = new LuaScript(scripts + findData.cFileName);
+				LuaScript *script = new LuaScript(scpath + findData.cFileName);
 				Scripts[findData.cFileName] = script;
 				if(autorun) script->Load();
-				else LOG(INFO) << "Script " << script->GetPath() << " found but not loaded";
+				else LOG(WARNING) << "Script " << script->GetPath() << " found but not loaded (autorun disabled)";
 			}
 		}
 	} while(FindNextFile(hFind, &findData));
@@ -34,7 +36,7 @@ bool RedLuaScanScripts(void) {
 }
 
 void RedLuaMain(void) {
-	el::Configurations conf ("RedLua\\Log.conf");
+	el::Configurations conf (REDLUA_LOGCONF_FILE);
 	el::Loggers::reconfigureLogger("default", conf);
 	el::base::TypedConfigurations *logger;
 	logger = el::Loggers::getLogger("default")->typedConfigurations();
@@ -84,6 +86,6 @@ void RedLuaFinish(void) {
 	LOG(INFO) << "RedLua stopped";
 	fclose(stderr); fclose(stdout);
 	if(HasConsole && !FreeConsole())
-		LOG(ERROR) << "Failed to free console";
+		LOG(ERROR) << "Failed to free the console";
 }
 #endif

@@ -1,12 +1,13 @@
-#include "thirdparty\easyloggingpp.h"
-
 #include "luanative.hpp"
+#include "constants.hpp"
 
 #include "native\object.hpp"
 #include "native\types.hpp"
 #include "native\typemap.hpp"
 #include "native\call.hpp"
 #include "nativedb.hpp"
+
+#include "thirdparty\easyloggingpp.h"
 
 static int native_call(lua_State *L) {
 	auto nspace = Natives.GetNamespace(luaL_checkstring(L, 1));
@@ -112,7 +113,7 @@ int luaopen_native(lua_State *L) {
 	if(Natives.GetMethodCount() == 0) {
 		NativeDB::Returns ret;
 		if((ret = Natives.Load()) != NativeDB::Returns::NLOAD_OK)
-			LOG(ERROR) << "Failed to load native.json: " << ret;
+			LOG(ERROR) << "Failed to load " REDLUA_NATIVES_FILE ": " << ret;
 	}
 
 	call_init(L);

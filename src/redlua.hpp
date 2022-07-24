@@ -1,10 +1,11 @@
 #pragma once
 
+#include "luanative.hpp"
+#include "constants.hpp"
+
 #include <string>
 #include "thirdparty\luajit\src\lua.hpp"
 #include "thirdparty\easyloggingpp.h"
-
-#include "luanative.hpp"
 
 extern const luaL_Reg redlibs[];
 
@@ -78,9 +79,9 @@ public:
 
 		lua_getglobal(L, "package");
 		if(!lua_isnil(L, -1)) {
-			lua_pushstring(L, "RedLua\\Libs\\?.lua;RedLua\\Libs\\?\\init.lua");
+			lua_pushstring(L, REDLUA_PATHS);
 			lua_setfield(L, -2, "path");
-			lua_pushstring(L, "RedLua\\Libs\\C\\?.dll;RedLua\\Libs\\C\\?\\core.dll");
+			lua_pushstring(L, REDLUA_CPATHS);
 			lua_setfield(L, -2, "cpath");
 		}
 		lua_pop(L, 1);

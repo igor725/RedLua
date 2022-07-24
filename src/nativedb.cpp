@@ -1,3 +1,4 @@
 #include "nativedb.hpp"
+#include "constants.hpp"
 
-NativeDB Natives ("RedLua\\natives.json");
+NativeDB Natives (REDLUA_NATIVES_FILE);

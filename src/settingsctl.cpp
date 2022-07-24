@@ -1,3 +1,4 @@
 #include "settingsctl.hpp"
+#include "constants.hpp"
 
-SettingsController Settings ("RedLua\\Settings.json");
+SettingsController Settings (REDLUA_SETTINGS_FILE);

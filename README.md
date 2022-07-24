@@ -9,6 +9,30 @@ Download the latest [release](https://github.com/igor725/RedLua/releases) and ex
 ## Usage
 Press **F7** (hotkey can be modified in the `Settings.json` file, keycodes can be found [here](https://cherrytree.at/misc/vk.htm)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
 
+RedLua uses the [**Easylogging++**](https://github.com/amrayn/easyloggingpp#configuration) library, so if you want to configure the logger, just navigate to `<Your game directory>\RedLua\` and create a file called `Log.conf` with following contents:
+```conf
+* GLOBAL:
+   FILENAME             = "RedLua\Run.log"
+   ENABLED              = true
+   TO_FILE              = false
+   TO_STANDARD_OUTPUT   = true
+   SUBSECOND_PRECISION  = 6
+   PERFORMANCE_TRACKING = true
+   MAX_LOG_FILE_SIZE    = 2097152
+   LOG_FLUSH_THRESHOLD  = 0
+* INFO:
+   FORMAT               = "%datetime INFO  %msg"
+* DEBUG:
+   FORMAT               = "%datetime{%d/%M} DEBUG %func %msg"
+* WARNING:
+   FORMAT               = "%datetime WARN  %msg"
+* ERROR:
+   FORMAT               = "%datetime ERROR %msg"
+* FATAL:
+   FORMAT               = "%datetime FATAL %msg"
+
+```
+
 ## Scripting
 
 RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`.

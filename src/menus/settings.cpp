@@ -6,14 +6,18 @@
 #include "nativedb.hpp"
 #include "base.hpp"
 
-class MenuItemAutorun : public MenuItemSwitchable {
+class MenuItemSSwitch : public MenuItemSwitchable {
+	std::string m_field;
+	bool m_initial;
+
 	virtual void OnSelect() {
-		SetState(Settings.Switch("autorun", true));
+		SetState(Settings.Switch(m_field, m_initial));
 	}
 
 public:
-	MenuItemAutorun(string caption, bool initial)
-		: MenuItemSwitchable(caption, initial) {}
+	MenuItemSSwitch(string caption, std::string field, bool initial)
+		: MenuItemSwitchable(caption, initial),
+		  m_field(field), m_initial(initial) {}
 };
 
 class MenuItemReloadDB : public MenuItemDefault {
@@ -74,7 +78,8 @@ MenuBase *CreateSettings(MenuController *controller) {
 	auto menu = new MenuBase(new MenuItemTitle("RedLua Settings"));
 	controller->RegisterMenu(menu);
 
-	menu->AddItem(new MenuItemAutorun("Autorun feature enabled", Settings.Read("autorun", true)));
+	menu->AddItem(new MenuItemSSwitch("Autorun feature enabled", "autorun", Settings.Read("autorun", true)));
+	menu->AddItem(new MenuItemSSwitch("Check for updates at startup", "updates", Settings.Read("updates", false)));
 	menu->AddItem(new MenuItemReloadDB("Reload NativeDB"));
 	menu->AddItem(new MenuItemMenu("Change menu position", CreatePositionMenu(controller)));
 	menu->AddItem(new MenuItemToggleAll("Toggle all scripts"));
