@@ -11,7 +11,6 @@
 #include <windows.h>
 #include <map>
 
-#ifndef REDLUA_STANDALONE
 std::map <std::string, LuaScript *> Scripts {};
 static BOOL HasConsole = false;
 
@@ -54,18 +53,23 @@ void RedLuaMain(void) {
 	}
 
 	LOG(INFO) << "Logger initialized";
+#ifndef REDLUA_STANDALONE
 	auto menuController = new MenuController();
 	auto mainMenu = CreateMainMenu(menuController);
 	menuController->SetCurrentPosition(
 		Settings.Read("menu_position", 0)
 	);
 	LOG(DEBUG) << "RedLua menu initialized";
-
+#endif
 	if(Settings.Read("auto_updates", false)) {
 		LOG(DEBUG) << "Starting updates checker...";
 		std::string data;
 		if(UpdatesCtl.CheckRedLua(data))
+#ifdef REDLUA_STANDALONE
+			LOG(INFO) << "New version " << data << " detected";
+#else
 			CreateUpdateAlert(menuController, data);
+#endif
 		else
 			LOG(DEBUG) << "RedLua updater: " << data;
 		if(UpdatesCtl.CheckNativeDB(data))
@@ -81,6 +85,7 @@ void RedLuaMain(void) {
 			LOG(ERROR) << "Failed to load " REDLUA_NATIVES_FILE ": " << ret;
 	}
 
+#ifndef REDLUA_STANDALONE
 	RedLuaScanScripts();
 
 	while(true) {
@@ -98,6 +103,7 @@ void RedLuaMain(void) {
 
 		WAIT(0);
 	}
+#endif
 }
 
 void RedLuaFinish(void) {
@@ -111,4 +117,3 @@ void RedLuaFinish(void) {
 	if(HasConsole && !FreeConsole())
 		LOG(ERROR) << "Failed to free the console";
 }
-#endif

@@ -207,7 +207,7 @@ static int global_index(lua_State *L) {
 		if(nspace == nullptr) return 1; // Возвращаем тот nil, что нам дал rawget выше
 
 		lua_pop(L, 1);
-		lua_rawgeti(L, LUA_REGISTRYINDEX, ReferenceMap[L].ns);
+		lua_getfield(L, LUA_REGISTRYINDEX, "REDLUA_NAMESPACE");
 		lua_rawgeti(L, -1, 1);
 		int mt_top = (int)lua_objlen(L, -1) + 1;
 		lua_rawgeti(L, -2, 2);
@@ -235,7 +235,7 @@ static void call_init(lua_State *L) {
 	lua_setfield(L, -2, "__metatable");
 	luaL_setfuncs(L, nspacemeta, 0);
 	lua_setmetatable(L, -2);
-	ReferenceMap[L].ns = luaL_ref(L, LUA_REGISTRYINDEX);
+	lua_setfield(L, LUA_REGISTRYINDEX, "REDLUA_NAMESPACE");
 
 	lua_createtable(L, 0, 1);
 	lua_pushcfunction(L, global_index);

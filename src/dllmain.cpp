@@ -24,6 +24,15 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 			RedLuaFinish();
 			break;
 	}
+#else
+	switch(dwReason) {
+		case DLL_PROCESS_ATTACH:
+			RedLuaMain();
+			break;
+		case DLL_PROCESS_DETACH:
+			RedLuaFinish();
+			break;
+	}
 #endif
 
 	return TRUE;

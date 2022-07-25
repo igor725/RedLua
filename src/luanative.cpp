@@ -101,12 +101,6 @@ static const luaL_Reg nativelib[] = {
 	{NULL, NULL}
 };
 
-void luaclose_native(lua_State *L) {
-	auto it = ReferenceMap.find(L);
-	if(it != ReferenceMap.end())
-		ReferenceMap.erase(it);
-}
-
 int luaopen_native(lua_State *L) {
 	call_init(L);
 	nativeobj_init(L);

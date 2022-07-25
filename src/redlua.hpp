@@ -94,7 +94,6 @@ public:
 		if(LookForFunc("OnStop"))
 			CallFunc(0, 0);
 
-		luaclose_native(L);
 		lua_close(L);
 	}
 

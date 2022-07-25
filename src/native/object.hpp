@@ -44,14 +44,15 @@ static NativeObject *push_cached_lightobjectlink
 	int cache_ref = -1, NativeCacheField cache_id = NATIVEDATA_INVAL
 ) {
 	int cached = 0;
-	if(search_in_cache(L, &cache_ref, &cache_id, type, -1, &cached))
+	NativeCache *cache = get_native_cache(L, cache_ref);
+	if(search_in_cache(L, cache, &cache_id, type, -1, &cached))
 		return (NativeObject *)lua_touserdata(L, -1);
 	
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
 	NATIVEOBJECT_INITLIGHT(no, type, false, 1, *ptr);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 
-	save_to_cache(L, cache_ref, cache_id, type, -1, cached);
+	save_to_cache(L, cache, cache_id, type, -1, cached);
 	return no;
 }
 
@@ -62,14 +63,15 @@ static NativeObject *push_cached_fullobject
 	int cache_ref = -1, NativeCacheField cache_id = NATIVEDATA_INVAL
 ) {
 	int cached = 0;
-	if(search_in_cache(L, &cache_ref, &cache_id, type, id, &cached))
+	NativeCache *cache = get_native_cache(L, cache_ref);
+	if(search_in_cache(L, cache, &cache_id, type, id, &cached))
 		return (NativeObject *)lua_touserdata(L, -1);
 
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
-	NATIVEOBJECT_INIT(no, type, false, ReferenceMap[L].nc == cache_ref, 1, id);
+	NATIVEOBJECT_INIT(no, type, false, cache_ref == -1, 1, id);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 
-	save_to_cache(L, cache_ref, cache_id, type, id, cached);
+	save_to_cache(L, cache, cache_id, type, id, cached);
 	return no;
 }
 
@@ -165,6 +167,7 @@ static int native_tostring(lua_State *L) {
 
 static int native_newindex(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
+	luaL_argcheck(L, !no->hdr.isReadOnly, 1, "readonly object");
 	if(lua_type(L, 2) == LUA_TSTRING && no->hdr.type == NTYPE_VECTOR3)
 		return vector_newindex(L, no, *lua_tostring(L, 2));
 	uint idx = (uint)luaL_checkinteger(L, 2);
@@ -342,5 +345,5 @@ static void nativeobj_init(lua_State *L) {
 	luaL_setfuncs(L, nativeobj, 0);
 
 	create_luacache(L);
-	ReferenceMap[L].nc = luaL_ref(L, LUA_REGISTRYINDEX);
+	lua_setfield(L, LUA_REGISTRYINDEX, GLOBAL_NATIVECACHE);
 }
