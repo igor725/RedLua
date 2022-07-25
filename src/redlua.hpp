@@ -99,7 +99,12 @@ public:
 	}
 
 	bool Load(void) {
-		if(m_modref != LUA_REFNIL) luaL_unref(L, LUA_REGISTRYINDEX, m_modref);
+		if(m_modref != LUA_REFNIL) {
+			if(LookForFunc("OnReload") && !CallFunc(0, 0, false))
+				return false;
+
+			luaL_unref(L, LUA_REGISTRYINDEX, m_modref);
+		}
 		if(luaL_loadfile(L, m_path.c_str()) != 0) {
 			LogLuaError();
 			return false;

@@ -35,7 +35,7 @@ RedLua uses the [**Easylogging++**](https://github.com/amrayn/easyloggingpp#conf
 
 ## Scripting
 
-RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`. Almost every function of the RDR2's RAGE is described [here](https://alloc8or.re/rdr3/nativedb/) and [here](https://www.rdr2mods.com/nativedb/index/builtin/).
+RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`, `OnReload`. Almost every function of the RDR2's RAGE is described [here](https://alloc8or.re/rdr3/nativedb/) and [here](https://www.rdr2mods.com/nativedb/index/builtin/).
 
 Example:
 ```lua
