@@ -1,6 +1,6 @@
 #pragma once
 
-#include "redlua.hpp"
+#include "luascript.hpp"
 
 #include <map>
 

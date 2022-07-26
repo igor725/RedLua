@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include "thirdparty\ScriptHook\inc\types.h"
-#include "thirdparty\ScriptHook\inc\enums.h"
-
-#include "thirdparty\ScriptHook\inc\main.h"
+#include "scripthook.hpp"
+#include "constants.hpp"
 
 #include "natives.h"
 #include "settingsctl.hpp"
@@ -221,7 +219,7 @@ class MenuInput
 public:
 	static bool MenuSwitchPressed()
 	{
-		return IsKeyJustUp(Settings.Read("menu_hotkey", VK_F7));
+		return IsKeyJustUp(Settings.Read("menu_hotkey", REDLUA_HOTKEY_DEFAULT));
 	}
 	static MenuInputButtonState GetButtonState()
 	{
@@ -236,8 +234,12 @@ public:
 	}
 	static void MenuInputBeep()
 	{
+#ifdef REDLUA_GTAV
+		NATIVES::PLAY_SOUND_FRONTEND("NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+#else
 		NATIVES::STOP_SOUND_FRONTEND("NAV_RIGHT", "HUD_SHOP_SOUNDSET");
 		NATIVES::PLAY_SOUND_FRONTEND("NAV_RIGHT", "HUD_SHOP_SOUNDSET", 1, 0);
+#endif
 	}
 };
 

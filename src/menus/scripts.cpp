@@ -1,5 +1,5 @@
 #include "base.hpp"
-#include "redlua.hpp"
+#include "luascript.hpp"
 #include "menus\scripts.hpp"
 
 class MenuScript : public MenuBase {

@@ -7,7 +7,7 @@
 			"program": "D:\\LuaJIT\\src\\LuaJIT.exe",
 			"args": ["sl_test.lua"],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}\\objs\\output\\",
+			"cwd": "${workspaceFolder}\\objs\\outputRDR2\\",
 			"environment": [],
 			"console": "integratedTerminal",
 			"preLaunchTask": "Build RedLua (Standalone)"

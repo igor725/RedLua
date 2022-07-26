@@ -66,8 +66,8 @@ private:
 	int m_modref = LUA_REFNIL;
 
 public:
-	LuaScript(std::string luafile)
-	: m_path(luafile) {
+	LuaScript(std::string dir, std::string fname, bool dir_to_paths = false)
+	: m_path(dir + "\\" + fname) {
 		L = luaL_newstate();
 		luaL_openlibs(L);
 		for(const luaL_Reg *lib = redlibs; lib->name; lib++) {
@@ -79,9 +79,17 @@ public:
 
 		lua_getglobal(L, "package");
 		if(!lua_isnil(L, -1)) {
+			if(dir_to_paths)
+				lua_pushfstring(L, "%s\\%s%s\\%s;", dir.c_str(),
+					REDLUA_LPATH1, dir.c_str(), REDLUA_LPATH2);
 			lua_pushstring(L, REDLUA_PATHS);
+			if(dir_to_paths) lua_concat(L, 2);
 			lua_setfield(L, -2, "path");
+			if(dir_to_paths)
+				lua_pushfstring(L, "%s\\%s%s\\%s;", dir.c_str(),
+					REDLUA_CPATH1, dir.c_str(), REDLUA_CPATH2);
 			lua_pushstring(L, REDLUA_CPATHS);
+			if(dir_to_paths) lua_concat(L, 2);
 			lua_setfield(L, -2, "cpath");
 		}
 		lua_pop(L, 1);

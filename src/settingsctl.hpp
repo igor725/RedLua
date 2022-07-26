@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.hpp"
 #include "thirdparty\json.hpp"
 
 #include <fstream>
@@ -12,19 +13,18 @@ class SettingsController {
 
 public:
 	SettingsController(std::string file)
-		: m_file(file), m_data(R"(
-			{
-				"menu_hotkey": 118,
-				"menu_position": 0,
-				"autorun": true
-			}
-		)"_json) { if(!Load()) Save(); };
+		: m_file(file) { if(!Load()) Save(); };
 
 	bool Load(void) {
 		std::ifstream jfile(m_file);
 		if(jfile.is_open()) {
 			if(!(m_data = nlohmann::json::parse(jfile, nullptr, false)).is_discarded())
-				if(m_modified = !m_data.is_object()) m_data = {}; // Очищаем невалидный конфиг
+				if(m_modified = !m_data.is_object()) m_data = {
+					{"menu_hotkey", REDLUA_HOTKEY_DEFAULT},
+					{"menu_position", 0},
+					{"auto_updates", false},
+					{"autorun", false},
+				}; // Очищаем невалидный конфиг
 			jfile.close();
 
 			return true;

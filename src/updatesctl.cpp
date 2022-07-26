@@ -4,106 +4,76 @@
 
 #include "thirdparty\json.hpp"
 #include <Windows.h>
+#include <WinInet.h>
 #include <string>
+
+#pragma comment(lib, "delayimp")
+#pragma comment(lib, "WinInet")
 
 UpdatesController UpdatesCtl;
 using json = nlohmann::json;
 
-static const char *symlist[] = {
-	"curl_easy_init", "curl_easy_setopt",
-	"curl_easy_perform", "curl_easy_strerror",
-	"curl_easy_getinfo", "curl_easy_cleanup",
-	"curl_slist_append", "curl_slist_free_all",
-	nullptr
-};
-
-static const char *liblist[] = {
-	"libcurl-x64.dll",
-	"libcurl.dll",
-	"curl.dll",
-	nullptr
-};
-
 static const std::string errors[] = {
-	"Error: libcurl.dll not found!",
+	"Internal error: ",
 	"Server responded with error: ",
 	"HTTP request failed: ",
-	"Malformed server response"
+	"Malformed server response",
+
+	// Internal errors
+	"failed to initialize WinInet",
+	"InternetOpenUrl failed",
+	"HttpQueryInfo failed"
 };
 
-static struct {
-	HMODULE lib;
-
-	void *(*easy_init)(void);
-	int (*easy_setopt)(void *, int, ...);
-	int (*easy_perform)(void *);
-	const char *(*easy_strerror)(int);
-	void (*easy_getinfo)(void *, int, void *);
-	void (*easy_cleanup)(void *);
-	void *(*slist_append)(void *, const char *);
-	void (*slist_free_all)(void *);
-} curl;
+static HINTERNET hInternet = NULL;
 
 bool UpdatesController::Prepare(void) {
-	for(int i = 0; !curl.lib && liblist[i]; i++) {
-		curl.lib = LoadLibraryA(liblist[i]);
-		for(int j = 0; curl.lib && symlist[j]; j++) {
-			if((((void**)&curl)[j + 1] = GetProcAddress(curl.lib, symlist[j])) == nullptr) {
-				FreeLibrary(curl.lib);
-				curl.lib = nullptr;
-				break;
-			}
-		}
-	}
-
-	return curl.lib != nullptr;
+	if(!hInternet)
+		hInternet = InternetOpen("RL/1.0", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	return hInternet != NULL;
 }
 
-static void *default_headers(void) {
-	void *list = curl.slist_append(nullptr, "User-Agent: RL/1.0");
-	list = curl.slist_append(list, "Accept: application/json");
-	return list;
+void UpdatesController::Stop(void) {
+	if(hInternet) InternetCloseHandle(hInternet);
 }
 
-static size_t __stdcall write_string(char *ptr, size_t sz, size_t nmemb, void *ud) {
-	*(static_cast<std::string*>(ud)) += std::string{ptr, sz * nmemb};
-	return sz * nmemb;
+static HINTERNET open_request(std::string url, std::string headers) {
+	return InternetOpenUrl(hInternet, url.c_str(), headers.c_str(), headers.length(),
+	INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_NO_COOKIES, 0);
 }
 
 bool UpdatesController::CheckRedLua(std::string &ret) {
-	if(curl.lib == nullptr && !Prepare()) {
-		ret = errors[0];
+	if(!Prepare()) {
+		ret = errors[0] + errors[4];
 		return false;
 	}
 
 	bool success;
 	std::string temp;
-	void *slist = default_headers();
-	void *handle = curl.easy_init();
-	curl.easy_setopt(handle, 42/*CURLOPT_HEADER*/, 0);
-	curl.easy_setopt(handle, 52/*CURLOPT_FOLLOWLOCATION*/, 1);
-	curl.easy_setopt(handle, 53/*CURLOPT_TRANSFERTEXT*/, 1);
-	curl.easy_setopt(handle, 64/*CURLOPT_SSL_VERIFYPEER*/, 0);
-	curl.easy_setopt(handle, 10002/*CURLOPT_URL*/, REDLUA_TAGS_URL);
-	curl.easy_setopt(handle, 10023/*CURLOPT_HTTPHEADER*/, slist);
-	curl.easy_setopt(handle, 20011/*CURLOPT_WRITEFUNCTION*/, write_string);
-	curl.easy_setopt(handle, 10001/*CURLOPT_WRITEDATA*/, &temp);
+	static const DWORD BUFSIZE = 1024;
+	BYTE buf[BUFSIZE];
+	DWORD read = 0;
 
+	HINTERNET hRequest;
 	do {
-		int res;
-		if((res = curl.easy_perform(handle)) != 0/*CURLE_OK*/) {
-			ret = errors[2] + (std::string)curl.easy_strerror(res);
-			success = false;
+		hRequest = open_request(REDLUA_TAGS_URL, "Accept: application/json");
+		if(hRequest == NULL) break;
+
+		while((success = InternetReadFile(hRequest, buf, BUFSIZE, &read)) && read > 0)
+			temp.append((const char *)buf, read);
+		if(!success) {
+			ret = errors[2] + std::to_string(GetLastError());
 			break;
 		}
+
 		json jdata = json::parse(temp, nullptr, false);
 		if(jdata.is_discarded()) {
 			ret = errors[2] + errors[3];
 			success = false;
 			break;
 		}
-		int curr_rel = -1;
 
+		int curr_rel = -1;
 		if(jdata.is_array()) {
 			for(auto &x : jdata.items()) {
 				json &jname = x.value()["name"];
@@ -123,77 +93,74 @@ bool UpdatesController::CheckRedLua(std::string &ret) {
 
 		success = curr_rel != 0 && ret != "";
 	} while(0);
-	
-	curl.slist_free_all(slist);
-	curl.easy_cleanup(handle);
+
+	InternetCloseHandle(hRequest);
 	return success;
 }
 
-static size_t etag_extract(char *ptr, size_t sz, size_t nmemb, void *ud) {
-	size_t out = sz * nmemb;
-	if(out > 10 && _strnicmp(ptr, "etag: ", 6) == 0) {
-		std::string *str = (std::string *)ud;
-		// Вот такой вот странный, но действенный способ обрезать символы \r\n
-		*str = std::string{ptr + 6, out - (ptr[out - 2] == '\r' ? 8 : (ptr[out - 1] == '\n' ? 7 : 6))};
-	}
-
-	return out;
-}
-
-bool UpdatesController::CheckNativeDB(std::string &ret) {
-	if(curl.lib == nullptr && !Prepare()) {
-		ret = errors[0];
+bool UpdatesController::CheckNativeDB(std::string &ret, bool force_update) {
+	if(!Prepare()) {
+		ret = errors[0] + errors[4];
 		return false;
 	}
 
-	FILE *file = fopen(REDLUA_NATIVES_FILE, "r+");
-	if(!file && (file = fopen(REDLUA_NATIVES_FILE, "w")) == NULL) {
-		ret = "Failed to open " REDLUA_NATIVES_FILE " file!";
-		return false;
-	}
-
+	std::string temp;
 	bool success = false;
-	std::string etag = "W/\"\"";
-	void *slist = default_headers();
-	slist = curl.slist_append(slist, ("If-None-Match: " + Settings.Read("nativedb_etag", etag)).c_str());
+	static const DWORD BUFSIZE = 1024;
+	BYTE buf[BUFSIZE];
+	DWORD read = 0;
 
-	void *handle = curl.easy_init();
-	curl.easy_setopt(handle, 42/*CURLOPT_HEADER*/, 0);
-	curl.easy_setopt(handle, 52/*CURLOPT_FOLLOWLOCATION*/, 1);
-	curl.easy_setopt(handle, 53/*CURLOPT_TRANSFERTEXT*/, 1);
-	curl.easy_setopt(handle, 64/*CURLOPT_SSL_VERIFYPEER*/, 0);
-	curl.easy_setopt(handle, 10002/*CURLOPT_URL*/, REDLUA_NATIVEDB_URL);
-	curl.easy_setopt(handle, 10023/*CURLOPT_HTTPHEADER*/, slist);
-	curl.easy_setopt(handle, 20011/*CURLOPT_WRITEFUNCTION*/, fwrite);
-	curl.easy_setopt(handle, 10001/*CURLOPT_WRITEDATA*/, file);
-	curl.easy_setopt(handle, 20079/*CURLOPT_HEADERFUNCTION*/, etag_extract);
-	curl.easy_setopt(handle, 10029/*CURLOPT_WRITEDATA*/, &etag);
+	FILE *file = NULL;
+	HINTERNET hRequest;
 
 	do {
-		int res;
-		if((res = curl.easy_perform(handle)) != 0/*CURLE_OK*/) {
-			ret = errors[2] + (std::string)curl.easy_strerror(res);
+		std::string etag = "W/\"\"",
+		headers = "Accept: application/json";
+		if(!force_update)
+			headers.append("\r\nIf-None-Match: " + Settings.Read("nativedb_etag", etag));
+		if((hRequest = open_request(REDLUA_NATIVEDB_URL, headers)) == NULL) {
+			ret = errors[0] + errors[5];
 			break;
 		}
 
-		long hcode = 0;
-		curl.easy_getinfo(handle, 0x200002/*CURLINFO_RESPONSE_CODE*/, &hcode);
-
-		if(hcode == 200) {
-			Settings.Write("nativedb_etag", "W/" + etag);
-			success = true;
+		DWORD code = 0; DWORD codelen = sizeof(DWORD);
+		if(!HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &code, &codelen, NULL)) {
+			ret = errors[0] + errors[6];
 			break;
 		}
 
-		if(hcode == 304)
+		if(code == 304) {
 			ret = "You already have the latest version of NativeDB";
-		else
-			ret = errors[2] + std::to_string(hcode);
+			break;
+		} else if(code != 200) {
+			ret = errors[2] + std::to_string(code);
+			break;
+		}
+
+		if((file = fopen(REDLUA_NATIVES_FILE, "w")) == NULL) {
+			ret = "Failed to open " REDLUA_NATIVES_FILE " file: " + (std::string)strerror(errno);
+			break;
+		}
+
+		DWORD bufsize = BUFSIZE;
+		if(!HttpQueryInfoA(hRequest, HTTP_QUERY_ETAG, buf, &bufsize, NULL)) {
+			ret = errors[0] + errors[6];
+			break;
+		}
+
+		etag = std::string{(const char *)buf, bufsize};
+		Settings.Write("nativedb_etag", etag);
+		int errorcode = 0;
+		while((success = InternetReadFile(hRequest, buf, BUFSIZE, &read)) && read > 0)
+			if((success = (fwrite(buf, 1, read, file) == read)) == false) {
+				errorcode = errno;
+				break;
+			}
+		if(!success)
+			ret = errors[2] + std::to_string(errorcode != 0 ? errorcode : GetLastError());
 	} while(0);
 
-
-	curl.slist_free_all(slist);
-	curl.easy_cleanup(handle);
-	fclose(file);
+	InternetCloseHandle(hRequest);
+	if(file) fclose(file);
 	return success;
 }

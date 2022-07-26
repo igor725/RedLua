@@ -1,5 +1,5 @@
 #include "base.hpp"
-#include "redlua.hpp"
+#include "luascript.hpp"
 #include "nativedb.hpp"
 #include "settingsctl.hpp"
 #include "updatesctl.hpp"
@@ -23,14 +23,15 @@ bool RedLuaScanScripts(void) {
 	bool autorun = Settings.Read("autorun", true);
 
 	do {
-		if(findData.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY) {
-			if(!Scripts[findData.cFileName]) {
-				LuaScript *script = new LuaScript(scpath + findData.cFileName);
-				Scripts[findData.cFileName] = script;
-				if(autorun) script->Load();
-				else LOG(WARNING) << "Script " << script->GetPath() << " found but not loaded (autorun disabled)";
-			}
-		}
+		if(Scripts[findData.cFileName]) continue;
+		LuaScript *script;
+		if(findData.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY)
+			script = new LuaScript(scpath, findData.cFileName);
+		else
+			script = new LuaScript(scpath + findData.cFileName, "main.lua", true);
+		Scripts[findData.cFileName] = script;
+		if(autorun) script->Load();
+		else LOG(WARNING) << "Script " << script->GetPath() << " found but not loaded (autorun disabled)";
 	} while(FindNextFile(hFind, &findData));
 
 	FindClose(hFind);
@@ -85,9 +86,8 @@ void RedLuaMain(void) {
 			LOG(ERROR) << "Failed to load " REDLUA_NATIVES_FILE ": " << ret;
 	}
 
-#ifndef REDLUA_STANDALONE
 	RedLuaScanScripts();
-
+#ifndef REDLUA_STANDALONE
 	while(true) {
 		if(MenuInput::MenuSwitchPressed()) {
 			MenuInput::MenuInputBeep();
@@ -112,6 +112,7 @@ void RedLuaFinish(void) {
 		it = Scripts.erase(it);
 	}
 	Settings.Save();
+	UpdatesCtl.Stop();
 	LOG(INFO) << "RedLua stopped";
 	fclose(stderr); fclose(stdout);
 	if(HasConsole && !FreeConsole())

@@ -3,12 +3,12 @@
 #include <string>
 
 class UpdatesController {
-	virtual bool Prepare(void);
+	bool Prepare(void);
 
 public:
-	UpdatesController () { (void)Prepare(); }
-	virtual bool CheckRedLua(std::string &ret);
-	virtual bool CheckNativeDB(std::string &ret);
+	bool CheckRedLua(std::string &ret);
+	bool CheckNativeDB(std::string &ret, bool force_update = false);
+	void Stop(void);
 };
 
 extern UpdatesController UpdatesCtl;

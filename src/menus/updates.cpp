@@ -4,6 +4,7 @@
 #include "updatesctl.hpp"
 #include "constants.hpp"
 #include "nativedb.hpp"
+#include "thirdparty\keyboard.h"
 
 class MenuItemUpdateRL : public MenuItemDefault {
 	virtual void OnSelect(void) {
@@ -22,7 +23,7 @@ public:
 class MenuItemUpdateDB : public MenuItemDefault {
 	virtual void OnSelect(void) {
 		std::string err;
-		if(UpdatesCtl.CheckNativeDB(err)) {
+		if(UpdatesCtl.CheckNativeDB(err, IsKeyDown(VK_CONTROL))) {
 			NativeDB::Returns ret;
 			if((ret = Natives.Load()) == NativeDB::Returns::NLOAD_OK)
 				SetStatusText("NativeDB updated and reloaded successfully!");

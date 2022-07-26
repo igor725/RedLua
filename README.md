@@ -4,7 +4,7 @@ RedLua is a ScriptHookRDR2 library that simplifies the game modding process.
 
 ## Installation
 
-Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder. **Note that the RedLua won't work without the [ScriptHookRDR2](https://www.dev-c.com/rdr2/scripthookrdr2/) library!**
+Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder (must be writeable). **Note that the RedLua won't work without the [ScriptHookRDR2](https://www.dev-c.com/rdr2/scripthookrdr2/) library!**
 
 ## Usage
 Press **F7** (hotkey can be modified in the `Settings.json` file, keycodes can be found [here](https://cherrytree.at/misc/vk.htm)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
@@ -165,7 +165,7 @@ misc.iskeyjustup(VK_*, exclusive = false)
 misc.resetkey(VK_*)
 
 -- Get game version
-misc.gamever() -- Returns: number, e.g. 1436.31
+misc.gamever() -- Returns: number (e.g. 1436.31) and string ("rdr3" or "gta5")
 
 -- Get RedLua version
 misc.libver() -- Returns: integer, e.g. 010, 020, etc.
@@ -181,4 +181,4 @@ Thanks to [Mike Pall](https://github.com/LuaJIT/LuaJIT), [Alexander Blade](https
 
 ## License
 
-RedLua is released under the MIT License. This license excludes files in the `src\thirdparty` folder that may be distributed under another license. Please read the `LICENSE` file for more information.
+RedLua is released under The MIT License. This license excludes files in the `src\thirdparty` that may be distributed under another license. Please read the `LICENSE` file for more information.

@@ -29,7 +29,9 @@ jobs:
 
       - name: Download ScriptHookSDK
         shell: pwsh
-        run: .\misc\ScriptHook.ps1
+        run: |
+          .\misc\ScriptHook.ps1
+          .\misc\ScriptHook.ps1 gtav
 
       - name: Detect MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -37,14 +39,13 @@ jobs:
           arch: x86_64
 
       - name: Build plugin
-        run: .\build.bat
+        run: |
+          .\build.bat
+          .\build.bat gtav
 
       - name: Build release archive
-        run: |
-          New-Item -Path ".\objs\output\" -Name "RedLua" -ItemType "directory"
-          Copy-Item .\LICENSE,.\README.md .\objs\output\
-          curl.exe -o.\objs\output\RedLua\natives.json https://raw.githubusercontent.com/alloc8or/rdr3-nativedb-data/master/natives.json
-          7z.exe a -tzip .\objs\out.zip .\objs\output\*.* -r
+        shell: pwsh
+        run: .\misc\Pack.ps1
 
       - name: Create release
         id: release
@@ -59,12 +60,22 @@ jobs:
           draft: false
           prerelease: true
 
-      - name: Upload assets
+      - name: Upload assets (RDR2)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: .\objs\out.zip
+          asset_path: .\objs\outRDR2.zip
           asset_name: RedLua-${{ github.ref_name }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload assets (GTAV)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: .\objs\outV.zip
+          asset_name: RedLuaV-${{ github.ref_name }}.zip
           asset_content_type: application/zip

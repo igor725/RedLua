@@ -1,9 +1,10 @@
 #pragma once
 
-#ifndef REDLUA_STANDALONE
-#include "thirdparty\ScriptHook\inc\nativeCaller.h"
-#else
+#ifdef REDLUA_STANDALONE
 #include "thirdparty\easyloggingpp.h"
+#define nativeInit own_nativeInit
+#define nativePush own_nativePush
+#define nativeCall own_nativeCall
 
 static void nativeInit(UINT64 hash) {
 	LOG(INFO) << "[NC] START " << (void *)hash;
@@ -27,7 +28,7 @@ static PUINT64 nativeCall() {
 }
 #endif
 
-#include "thirdparty\ScriptHook\inc\types.h"
+#include "scripthook.hpp"
 
 #include "nativedb.hpp"
 #include "native\cache.hpp"

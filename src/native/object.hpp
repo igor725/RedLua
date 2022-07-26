@@ -77,13 +77,15 @@ static NativeObject *push_cached_fullobject
 
 static NativeObject *native_check(lua_State *L, int idx, NativeType type) {
 	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
-	NativeTypeInfo &nti_got = get_type_info(no->hdr.type),
-	&nti_exp = get_type_info(type);
-	if(!IS_NATIVETYPES_EQU(type, nti_exp, no->hdr.type, nti_got)) {
-		auto msg = lua_pushfstring(L, "%s expected, got %s",
-		nti_exp.name.c_str(), nti_got.name.c_str());
-		luaL_argerror(L, idx, msg);
-		return nullptr;
+	if(type != NTYPE_UNKNOWN) {
+		NativeTypeInfo &nti_got = get_type_info(no->hdr.type),
+		&nti_exp = get_type_info(type);
+		if(!IS_NATIVETYPES_EQU(type, nti_exp, no->hdr.type, nti_got)) {
+			auto msg = lua_pushfstring(L, "%s expected, got %s",
+			nti_exp.name.c_str(), nti_got.name.c_str());
+			luaL_argerror(L, idx, msg);
+			return nullptr;
+		}
 	}
 
 	return no;
@@ -191,7 +193,7 @@ static int native_newindex(lua_State *L) {
 					memcpy(ptr, lua_topointer(L, 3), nti.size);
 					break;
 				default:
-					luaL_typerror(L, 3, (nti.name + " or cdata").c_str());
+					luaL_typerror(L, 3, (nti.name + "/cdata").c_str());
 					break;
 			}
 			break;
@@ -273,7 +275,7 @@ static int vector_mul(lua_State *L, NativeObject *no) {
 				)),
 				(float)lua_tonumber(L, 2));
 		default:
-			return luaL_typerror(L, 2, "NativeObject or number");
+			return luaL_typerror(L, 2, "NativeObject/number");
 	}
 
 	return 0;

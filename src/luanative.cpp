@@ -63,9 +63,13 @@ static int native_new(lua_State *L) {
 	return 1;
 }
 
+#ifdef REDLUA_GTAV
+#define VTN(idx) (float)lua_tonumber(L, idx), 0
+#else
 #define VTN(idx) (float)lua_tonumber(L, idx)
+#endif
 static int native_vector(lua_State *L) {
-	Vector3 pos {VTN(1), VTN(2), VTN(3)};
+	Vector3 pos = {VTN(1), VTN(2), VTN(3)};
 	push_uncached_fullcopy(L, NTYPE_VECTOR3, (NativeData *)&pos);
 	return 1;
 }
@@ -79,12 +83,37 @@ static int native_vector(lua_State *L) {
 }
 #else
 #define WORLDGETALL(T, TN) {lua_pushinteger(L, 0); return 1;}
+#define getGlobalPtr rl_ptrnullsub
+#define getScriptHandleBaseAddress rl_ptrnullsub
+static PUINT64 rl_ptrnullsub(int) {return NULL;}
 #endif
 
 static int native_allobjs(lua_State *L) WORLDGETALL(NTYPE_OBJECT, Objects)
 static int native_allpeds(lua_State *L) WORLDGETALL(NTYPE_PED, Peds)
 static int native_allpick(lua_State *L) WORLDGETALL(NTYPE_PICKUP, Pickups)
 static int native_allvehs(lua_State *L) WORLDGETALL(NTYPE_VEHICLE, Vehicles)
+
+static int native_globalptr(lua_State *L) {
+	lua_pushlightuserdata(L, getGlobalPtr((int)luaL_checkinteger(L, 1)));
+	return 1;
+}
+
+static int native_scrbase(lua_State *L) {
+	int handle = 0;
+	switch(lua_type(L, 1)) {
+		case LUA_TNUMBER:
+			handle = (int)luaL_checkinteger(L, 1);
+			break;
+		case LUA_TUSERDATA:
+			handle = *(int *)NATIVEOBJECT_GETPTR(
+				native_check(L, 1, NTYPE_UNKNOWN)
+			);
+			break;
+	}
+
+	lua_pushlightuserdata(L, getScriptHandleBaseAddress(handle));
+	return 1;
+}
 
 static const luaL_Reg nativelib[] = {
 	{"call", native_call},
@@ -97,6 +126,9 @@ static const luaL_Reg nativelib[] = {
 	{"allpeds", native_allpeds},
 	{"allpickups", native_allpick},
 	{"allvehicles", native_allvehs},
+
+	{"globalptr", native_globalptr},
+	{"scrbase", native_scrbase},
 
 	{NULL, NULL}
 };

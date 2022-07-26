@@ -3,25 +3,43 @@
 #include "constants.hpp"
 
 #include "thirdparty\keyboard.h"
-#include "thirdparty\ScriptHook\inc\main.h"
+#include "scripthook.hpp"
+BOOL registred = FALSE;
 
 BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 #ifndef REDLUA_STANDALONE
 	switch(dwReason) {
 		case DLL_PROCESS_ATTACH:
+			tryagain:
 			if(!EnsureDirectory(REDLUA_ROOT_DIR)
 			|| !EnsureDirectory(REDLUA_SCRIPTS_DIR)
 			|| !EnsureDirectory(REDLUA_LIBS_DIR)
-			|| !EnsureDirectory(REDLUA_CLIBS_DIR))
-				break;
+			|| !EnsureDirectory(REDLUA_CLIBS_DIR)) {
+				switch(MessageBox(NULL, "Failed to create RedLua "
+					"directory, please set write permissions "
+					"to the root folder of the game.", "RedLua",
+					MB_ICONERROR | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
+				)) {
+					case IDCANCEL:
+						ExitProcess(ERROR_ACCESS_DENIED);
+						return FALSE;
+					case IDTRYAGAIN:
+						goto tryagain;
+					case IDCONTINUE:
+						return FALSE;
+				}
+			}
 
+			registred = TRUE;
 			scriptRegister(hInstance, RedLuaMain);
 			keyboardHandlerRegister(OnKeyboardMessage);
 			break;
 		case DLL_PROCESS_DETACH:
-			scriptUnregister(hInstance);
-			keyboardHandlerUnregister(OnKeyboardMessage);
-			RedLuaFinish();
+			if(registred) {
+				scriptUnregister(hInstance);
+				keyboardHandlerUnregister(OnKeyboardMessage);
+				RedLuaFinish();
+			}
 			break;
 	}
 #else

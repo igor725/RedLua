@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thirdparty\ScriptHook\inc\types.h"
+#include "scripthook.hpp"
 #include <string>
 #include <map>
 

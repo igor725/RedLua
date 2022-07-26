@@ -1,9 +1,30 @@
 #pragma once
 
-#include "thirdparty\ScriptHook\inc\types.h"
-#include "thirdparty\ScriptHook\inc\nativeCaller.h"
+#include "scripthook.hpp"
 
 namespace NATIVES {
+#ifdef REDLUA_GTAV
+	static const char* CREATE_STRING(int flags, const char* textTemplate, const char *string) {(void)flags; (void)textTemplate; return string; }
+	static Hash GET_HASH_KEY(char* string) { return invoke<Hash>(0xD24D37CC275948CC, string); }
+	static void PLAY_SOUND_FRONTEND(char* audioName, char* audioRef, BOOL p3) { invoke<Void>(0x67C540AA08E4A6F5, -1, audioName, audioRef, p3); }
+	static void DRAW_TEXT(const char* text, float x, float y) {
+		invoke<Void>(0x25FBB336DF1804CB, "STRING");
+		invoke<Void>(0x6C188BE134E074AA, text);
+		invoke<Void>(0xCD015E5BB0D96A57, x, y);
+	}
+	static void SET_TEXT_SCALE(float p0, float scale) { invoke<Void>(0x07C837F9A01C34C9, p0, scale); }
+	static void SET_TEXT_COLOR_RGBA(int r, int g, int b, int a) { invoke<Void>(0xBE6B23FFA53FB442, r, g, b, a); }
+	static void SET_TEXT_CENTRE(BOOL align) { invoke<Void>(0xC02F4DBFB51D988B, align); }
+	static void SET_TEXT_DROPSHADOW(int distance, int r, int g, int b, int a) { invoke<Void>(0x465C84BC39F1C351, distance, r, g, b, a); }
+	static void DRAW_RECT(float x, float y, float width, float height, int r, int g, int b, int a, BOOL p8, BOOL p9) { (void)p8; (void)p9; invoke<Void>(0x3A618A217E5154F0, x, y, width, height, r, g, b, a); }
+
+	static void NOTIFY(int type, int duration, const char *message) {
+		(void)type; (void)duration;
+		invoke<Void>(0x202709F4C58A0424, "STRING");
+		invoke<Void>(0x6C188BE134E074AA, message);
+		invoke<Void>(0x2ED7843F8F801023, true, true);
+	}
+#else
 	template<typename... Args>
 	static const char* CREATE_STRING(int flags, const char* textTemplate, Args... args) { return invoke<char*>(0xFA925AC00EB830B9, flags, textTemplate, args...); }
 	static Hash GET_HASH_KEY(char* string) { return invoke<Hash>(0xFD340785ADF8CFB7, string); }
@@ -36,4 +57,5 @@ namespace NATIVES {
 				break;
 		}
 	}
+#endif
 }
