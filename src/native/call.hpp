@@ -50,7 +50,7 @@ static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_all
 			nativePush(vec[i * 2]);
 		return 3;
 	}
-	
+
 	NativeTypeInfo &nti_obj = get_type_info(no->hdr.type),
 	&nti_param = get_type_info(param->type);
 
@@ -127,19 +127,19 @@ static int native_perform(lua_State *L, NativeMeth *meth) {
 			case NTYPE_HASH:
 				lua_pushinteger(L, *ret);
 				break;
-			
+
 			case NTYPE_FLOAT:
 				lua_pushnumber(L, *(float *)ret);
 				break;
-			
+
 			case NTYPE_BOOL:
 				lua_pushboolean(L, *(int *)ret);
 				break;
-			
+
 			case NTYPE_CHAR:
 				lua_pushlstring(L, (char *)ret, 1);
 				break;
-			
+
 			default:
 				push_cached_fullobject(L, meth->returns, (NativeData)*ret);
 				break;

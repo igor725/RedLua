@@ -18,8 +18,9 @@ public:
 
 class MenuTemporary : public MenuBase
 {
-	virtual void OnPop(void)
+	void OnPop(void)
 	{
+		GetController()->UnregisterMenu(this);
 		delete this;
 	}
 

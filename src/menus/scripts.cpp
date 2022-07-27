@@ -2,17 +2,13 @@
 #include "luascript.hpp"
 #include "menus\scripts.hpp"
 
-class MenuScript : public MenuBase {
-	virtual void OnPop() {
-		delete this;
-	}
-
+class MenuScript : public MenuTemporary {
 private:
 	LuaScript *m_script;
 
 public:
 	MenuScript(MenuItemTitle *title, LuaScript *script)
-		: MenuBase(title), m_script(script) {}
+		: MenuTemporary(title), m_script(script) {}
 
 	virtual LuaScript *GetScript(void) {
 		return m_script;

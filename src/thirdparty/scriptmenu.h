@@ -198,13 +198,13 @@ public:
 	void AddItem(MenuItemBase *item) { item->SetMenu(this); m_items.push_back(item); }
 	int GetActiveItemIndex() { return m_activeScreenIndex * MenuBase_linesPerScreen + m_activeLineIndex; }
 	void OnDraw();
-	void OnPop() {}
 	int OnInput();
 	void OnFrame()
 	{
 		for (size_t i = 0; i < m_items.size(); i++)
 			m_items[i]->OnFrame();
 	}
+	virtual void OnPop() {}
 	void SetController(MenuController *controller) { m_controller = controller; }
 	MenuController *GetController() { return m_controller; }
 };
@@ -302,6 +302,16 @@ public:
 		{
 			menu->SetController(this);
 			m_menuList.push_back(menu);
+		}
+	}
+	void UnregisterMenu(MenuBase *menu)
+	{
+		for (size_t i = 0; i < m_menuList.size(); i++) {
+			if (m_menuList[i] == menu)
+			{
+				m_menuList.erase(m_menuList.begin() + i);
+				break;
+			}
 		}
 	}
 	void Update()

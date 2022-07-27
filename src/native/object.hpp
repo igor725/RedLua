@@ -33,7 +33,7 @@ static NativeObject *push_uncached_fullcopy
 		memcpy(&no->content, ptr, nti.size * count);
 	else
 		memset(&no->content, 0, nti.size * count);
-	
+
 	return no;
 }
 
@@ -47,7 +47,7 @@ static NativeObject *push_cached_lightobjectlink
 	NativeCache *cache = get_native_cache(L, cache_ref);
 	if(search_in_cache(L, cache, &cache_id, type, -1, &cached))
 		return (NativeObject *)lua_touserdata(L, -1);
-	
+
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
 	NATIVEOBJECT_INITLIGHT(no, type, false, 1, *ptr);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
@@ -106,7 +106,7 @@ static int vector_newindex(lua_State *L, NativeObject *no, char idx) {
 		case 'X':
 			nv->x = (float)luaL_checknumber(L, 3);
 			break;
-		
+
 		case 'y':
 		case 'Y':
 			nv->y = (float)luaL_checknumber(L, 3);
@@ -130,7 +130,7 @@ static int vector_index(lua_State *L, NativeObject *no, char idx) {
 		case 'X':
 			lua_pushnumber(L, nv->x);
 			return 1;
-		
+
 		case 'y':
 		case 'Y':
 			lua_pushnumber(L, nv->y);

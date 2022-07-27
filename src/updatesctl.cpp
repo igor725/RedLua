@@ -16,13 +16,14 @@ using json = nlohmann::json;
 static const std::string errors[] = {
 	"Internal error: ",
 	"Server responded with error: ",
-	"HTTP request failed: ",
+	"HTTP request error: ",
 	"Malformed server response",
 
 	// Internal errors
-	"failed to initialize WinInet",
-	"InternetOpenUrl failed",
-	"HttpQueryInfo failed"
+	"failed to initialize WinInet ",
+	"InternetOpenUrl failed ",
+	"HttpQueryInfo failed ",
+	"HttpReadFile faield "
 };
 
 static HINTERNET hInternet = NULL;
@@ -39,12 +40,17 @@ void UpdatesController::Stop(void) {
 
 static HINTERNET open_request(std::string url, std::string headers) {
 	return InternetOpenUrl(hInternet, url.c_str(), headers.c_str(), headers.length(),
-	INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_NO_COOKIES, 0);
+	INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
+}
+
+static std::string build_error(int t1, int t2) {
+	std::string str = errors[t1] + errors[t2];
+	return str + std::to_string(GetLastError());
 }
 
 bool UpdatesController::CheckRedLua(std::string &ret) {
 	if(!Prepare()) {
-		ret = errors[0] + errors[4];
+		ret = build_error(0, 4);
 		return false;
 	}
 
@@ -56,13 +62,15 @@ bool UpdatesController::CheckRedLua(std::string &ret) {
 
 	HINTERNET hRequest;
 	do {
-		hRequest = open_request(REDLUA_TAGS_URL, "Accept: application/json");
-		if(hRequest == NULL) break;
+		if((hRequest = open_request(REDLUA_TAGS_URL, "Accept: application/json")) == NULL) {
+			ret = build_error(0, 5);
+			break;
+		}
 
 		while((success = InternetReadFile(hRequest, buf, BUFSIZE, &read)) && read > 0)
 			temp.append((const char *)buf, read);
 		if(!success) {
-			ret = errors[2] + std::to_string(GetLastError());
+			ret = build_error(2, 7);
 			break;
 		}
 
@@ -119,13 +127,13 @@ bool UpdatesController::CheckNativeDB(std::string &ret, bool force_update) {
 		if(!force_update)
 			headers.append("\r\nIf-None-Match: " + Settings.Read("nativedb_etag", etag));
 		if((hRequest = open_request(REDLUA_NATIVEDB_URL, headers)) == NULL) {
-			ret = errors[0] + errors[5];
+			ret = build_error(0, 5);
 			break;
 		}
 
 		DWORD code = 0; DWORD codelen = sizeof(DWORD);
 		if(!HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &code, &codelen, NULL)) {
-			ret = errors[0] + errors[6];
+			ret = build_error(0, 6);
 			break;
 		}
 
@@ -144,7 +152,7 @@ bool UpdatesController::CheckNativeDB(std::string &ret, bool force_update) {
 
 		DWORD bufsize = BUFSIZE;
 		if(!HttpQueryInfoA(hRequest, HTTP_QUERY_ETAG, buf, &bufsize, NULL)) {
-			ret = errors[0] + errors[6];
+			ret = build_error(0, 6);
 			break;
 		}
 

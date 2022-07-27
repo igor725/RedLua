@@ -46,7 +46,7 @@ void RedLuaMain(void) {
 	if(logger->enabled(el::Level::Global) && logger->toStandardOutput(el::Level::Global)) {
 		bool alloced = false;
 		if(AttachConsole(ATTACH_PARENT_PROCESS) || (alloced = AllocConsole()) == true) {
-			if(alloced) SetConsoleTitle("RedLua debug console");
+			if(alloced) SetConsoleTitle(REDLUA_NAME " debug console");
 			freopen("CONOUT$", "w", stdout);
 			freopen("CONOUT$", "w", stderr);
 			HasConsole = true;
@@ -60,7 +60,7 @@ void RedLuaMain(void) {
 	menuController->SetCurrentPosition(
 		Settings.Read("menu_position", 0)
 	);
-	LOG(DEBUG) << "RedLua menu initialized";
+	LOG(DEBUG) << REDLUA_NAME " menu initialized";
 #endif
 	if(Settings.Read("auto_updates", false)) {
 		LOG(DEBUG) << "Starting updates checker...";
@@ -72,7 +72,7 @@ void RedLuaMain(void) {
 			CreateUpdateAlert(menuController, data);
 #endif
 		else
-			LOG(DEBUG) << "RedLua updater: " << data;
+			LOG(DEBUG) << REDLUA_NAME " updater: " << data;
 		if(UpdatesCtl.CheckNativeDB(data))
 			LOG(INFO) << "NativeDB updated successfully";
 		else

@@ -1,8 +1,8 @@
 #pragma once
 
 #define REDLUA_NAME "RedLua"
-#define REDLUA_VERSION "v0.3.0"
-#define REDLUA_VERSION_NUM 030
+#define REDLUA_VERSION "v0.3.1"
+#define REDLUA_VERSION_NUM 031
 #define REDLUA_FULLNAME REDLUA_NAME " " REDLUA_VERSION
 
 #ifndef REDLUA_GTAV
