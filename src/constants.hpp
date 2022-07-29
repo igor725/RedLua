@@ -1,16 +1,16 @@
 #pragma once
 
 #define REDLUA_NAME "RedLua"
-#define REDLUA_VERSION "v0.3.1"
-#define REDLUA_VERSION_NUM 031
+#define REDLUA_VERSION "v0.4.0"
+#define REDLUA_VERSION_NUM 040
 #define REDLUA_FULLNAME REDLUA_NAME " " REDLUA_VERSION
 
-#ifndef REDLUA_GTAV
-#define REDLUA_GAMECODE "rdr3"
-#define REDLUA_HOTKEY_DEFAULT 0x76
-#else
+#ifdef REDLUA_GTAV
 #define REDLUA_GAMECODE "gta5"
 #define REDLUA_HOTKEY_DEFAULT 0x73
+#else
+#define REDLUA_GAMECODE "rdr3"
+#define REDLUA_HOTKEY_DEFAULT 0x76
 #endif
 
 #define REDLUA_TAGS_URL "https://api.github.com/repos/igor725/RedLua/tags"

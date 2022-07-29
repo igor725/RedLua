@@ -44,33 +44,25 @@ void RedLuaMain(void) {
 	el::base::TypedConfigurations *logger;
 	logger = el::Loggers::getLogger("default")->typedConfigurations();
 	if(logger->enabled(el::Level::Global) && logger->toStandardOutput(el::Level::Global)) {
-		bool alloced = false;
-		if(AttachConsole(ATTACH_PARENT_PROCESS) || (alloced = AllocConsole()) == true) {
-			if(alloced) SetConsoleTitle(REDLUA_NAME " debug console");
+		if(AttachConsole(ATTACH_PARENT_PROCESS) || (HasConsole = AllocConsole())) {
+			if(HasConsole) SetConsoleTitle(REDLUA_NAME " debug console");
 			freopen("CONOUT$", "w", stdout);
 			freopen("CONOUT$", "w", stderr);
-			HasConsole = true;
 		}
 	}
 
 	LOG(INFO) << "Logger initialized";
-#ifndef REDLUA_STANDALONE
 	auto menuController = new MenuController();
 	auto mainMenu = CreateMainMenu(menuController);
 	menuController->SetCurrentPosition(
 		Settings.Read("menu_position", 0)
 	);
 	LOG(DEBUG) << REDLUA_NAME " menu initialized";
-#endif
 	if(Settings.Read("auto_updates", false)) {
 		LOG(DEBUG) << "Starting updates checker...";
 		std::string data;
 		if(UpdatesCtl.CheckRedLua(data))
-#ifdef REDLUA_STANDALONE
-			LOG(INFO) << "New version " << data << " detected";
-#else
 			CreateUpdateAlert(menuController, data);
-#endif
 		else
 			LOG(DEBUG) << REDLUA_NAME " updater: " << data;
 		if(UpdatesCtl.CheckNativeDB(data))
@@ -87,7 +79,6 @@ void RedLuaMain(void) {
 	}
 
 	RedLuaScanScripts();
-#ifndef REDLUA_STANDALONE
 	while(true) {
 		if(MenuInput::MenuSwitchPressed()) {
 			MenuInput::MenuInputBeep();
@@ -103,7 +94,6 @@ void RedLuaMain(void) {
 
 		WAIT(0);
 	}
-#endif
 }
 
 void RedLuaFinish(void) {

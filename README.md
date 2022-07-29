@@ -143,7 +143,7 @@ native.new('Vehicle', 5) -- Returns: NativeObject of 5 Vehicles
 native.new('Vector3', 4) -- Returns: NativeVector, can be used in functions like ENTITY:GET_ENTITY_MATRIX(...)
 
 -- Get all world objects
-native.allobjects(objects_typed_array) -- Returns: objects count
+native.allobjects(objects_typed_array) -- Returns: number of objects
 native.allpeds(peds_typed_array)
 native.allpickups(pickups_typed_array)
 native.allvehicles(vehicles_typed_array)
@@ -169,6 +169,18 @@ misc.gamever() -- Returns: number (e.g. 1436.31) and string ("rdr3" or "gta5")
 
 -- Get RedLua version
 misc.libver() -- Returns: integer, e.g. 010, 020, etc.
+
+--[[
+	Library: menu
+]]
+
+-- Create a menu section for the script
+-- An example script is available here: examples/ScriptMenu.lua
+menu.set {...} -- Returns: nothing. Note that this function is NOT safe, it may throw an Lua error.
+
+-- Remove menu section for the script
+-- Note that the menu will only be removed after 1 or more (depends on the number of submenus) full garbage collection steps!
+menu.remove() -- Returns: nothing
 ```
 
 ## Contribution

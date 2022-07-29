@@ -6,7 +6,7 @@
 #include "base.hpp"
 
 class MenuItemScripts : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		if(auto menu = GetMenu())
 			if(auto controller = menu->GetController()) {
 				auto scrmenu = CreateScriptsList(controller);
@@ -20,7 +20,7 @@ public:
 };
 
 class MenuItemUpdates : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		if(RedLuaScanScripts())
 			SetStatusText("Scripts list updated");
 		else

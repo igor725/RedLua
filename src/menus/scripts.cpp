@@ -10,13 +10,13 @@ public:
 	MenuScript(MenuItemTitle *title, LuaScript *script)
 		: MenuTemporary(title), m_script(script) {}
 
-	virtual LuaScript *GetScript(void) {
+	LuaScript *GetScript(void) {
 		return m_script;
 	}
 };
 
 class MenuItemStatus : public MenuItemDefault {
-	virtual std::string GetCaption(void) {
+	std::string GetCaption(void) {
 		LuaScript *scr = ((MenuScript *)GetMenu())->GetScript();
 		return MenuItemDefault::GetCaption() +
 		std::string(scr->IsEnabled() ? "enabled," : "disabled,") +
@@ -29,11 +29,11 @@ public:
 };
 
 class MenuItemUsage : public MenuItemDefault {
-	virtual std::string GetCaption(void) {
+	std::string GetCaption(void) {
 		return MenuItemDefault::GetCaption() + m_usage + " KB";
 	}
 
-	virtual void OnSelect(void) {
+	void OnSelect(void) {
 		LuaScript *scr = ((MenuScript *)GetMenu())->GetScript();
 		m_usage = std::to_string(scr->GetMemoryUsage());
 	}
@@ -47,7 +47,7 @@ public:
 };
 
 class MenuItemReload : public MenuItemDefault {
-	virtual void OnSelect(void) {
+	void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
 		if(script->Load())
 			SetStatusText("Script successfully reloaded");
@@ -61,7 +61,7 @@ public:
 };
 
 class MenuItemUnload : public MenuItemDefault {
-	virtual void OnSelect(void) {
+	void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
 		for(std::map<std::string, LuaScript *>::iterator it = Scripts.begin(); it != Scripts.end();) {
 			if(it->second == script) {
@@ -81,7 +81,7 @@ public:
 };
 
 class MenuItemToggle : public MenuItemDefault {
-	virtual void OnSelect(void) {
+	void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
 		script->SetEnabled(!script->IsEnabled());
 	}
@@ -92,13 +92,20 @@ public:
 };
 
 class MenuItemScript : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		auto menu = new MenuScript(new MenuItemTitle(this->GetCaption()), script);
 		auto controller = GetMenu()->GetController();
 		controller->RegisterMenu(menu);
 
 		menu->AddItem(new MenuItemStatus("Status: "));
 		menu->AddItem(new MenuItemUsage("Usage: "));
+
+		auto scrmenu = script->GetMyMenu();
+		if(scrmenu) {
+			controller->RegisterMenu(scrmenu);
+			menu->AddItem(new MenuItemMenu("Script menu", scrmenu));
+		}
+
 		menu->AddItem(new MenuItemToggle("Toggle"));
 		menu->AddItem(new MenuItemReload("Reload"));
 		menu->AddItem(new MenuItemUnload("Unload"));
@@ -115,7 +122,7 @@ public:
 };
 
 MenuTemporary *CreateScriptsList(MenuController *controller) {
-	auto menu = new MenuTemporary(new MenuItemTitle("Scripts list"));
+	auto menu = new MenuTemporary(new MenuItemListTitle("Scripts list"));
 	controller->RegisterMenu(menu);
 
 	if(Scripts.size() > 0) {
@@ -123,7 +130,6 @@ MenuTemporary *CreateScriptsList(MenuController *controller) {
 			menu->AddItem(new MenuItemScript(x.first, x.second));
 	} else
 		menu->AddItem(new MenuItemDefault("No scripts found"));
-
 
 	return menu;
 }

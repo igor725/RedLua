@@ -6,6 +6,7 @@
 #include <string>
 #include "thirdparty\LuaJIT\src\lua.hpp"
 #include "thirdparty\easyloggingpp.h"
+#include "thirdparty\scriptmenu.h"
 
 extern const luaL_Reg redlibs[];
 
@@ -168,6 +169,13 @@ public:
 	void OnTick(void) {
 		if(LookForFunc("OnTick"))
 			CallFunc(0, 0);
+	}
+
+	MenuBase *GetMyMenu(void) {
+		lua_getfield(L, LUA_REGISTRYINDEX, "MY_MENU_CLASS");
+		auto menu = (MenuBase **)lua_topointer(L, -1);
+		lua_pop(L, 1);
+		return menu ? *menu : nullptr;
 	}
 
 	float GetMemoryUsage(void) {

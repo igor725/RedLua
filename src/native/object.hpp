@@ -12,7 +12,7 @@ static NativeObject *push_uncached_lightobjectcopy
 	uint count = NOBJCOUNT_UNKNOWN
 ) {
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
-	NATIVEOBJECT_INITLIGHT(no, type, false, count, *ptr); // TODO: Поддержка больших типов (н.р векторов)
+	NATIVEOBJECT_INITLIGHT(no, type, false, count, *ptr); // TODO: Поддержка больших типов (н-р векторов)
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 
 	return no;

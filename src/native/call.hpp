@@ -1,33 +1,5 @@
 #pragma once
 
-#ifdef REDLUA_STANDALONE
-#include "thirdparty\easyloggingpp.h"
-#define nativeInit own_nativeInit
-#define nativePush own_nativePush
-#define nativeCall own_nativeCall
-
-static void nativeInit(UINT64 hash) {
-	LOG(INFO) << "[NC] START " << (void *)hash;
-}
-
-template <typename T>
-static inline void nativePush(T val) {
-	UINT64 val64 = 0;
-	if (sizeof(T) > sizeof(UINT64)) {
-		throw "error, value size > 64 bit";
-	}
-	*reinterpret_cast<T *>(&val64) = val;
-	LOG(INFO) << "\t [NC] Argument: " << (void *)val64;
-}
-
-static PUINT64 nativeCall() {
-	// Самый большой из имеющихся типов, чтобы наверняка
-	static Vector3 natret = {0};
-	LOG(INFO) << "[NC] END";
-	return (PUINT64)&natret;
-}
-#endif
-
 #include "scripthook.hpp"
 
 #include "nativedb.hpp"

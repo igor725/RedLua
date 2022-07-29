@@ -2,7 +2,7 @@
 #include "settingsctl.hpp"
 
 class MenuItemPosition : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		GetMenu()->GetController()->SetCurrentPosition(
 			Settings.Write("menu_position", m_position)
 		);

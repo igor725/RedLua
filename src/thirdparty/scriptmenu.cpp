@@ -163,3 +163,11 @@ int MenuBase::OnInput()
 
 	return waitTime;
 }
+
+MenuBase::~MenuBase()
+{
+	if(m_controller)
+		m_controller->UnregisterMenu(this);
+	for each (auto item in m_items)
+		delete item;
+}

@@ -7,7 +7,7 @@
 #include "thirdparty\keyboard.h"
 
 class MenuItemUpdateRL : public MenuItemDefault {
-	virtual void OnSelect(void) {
+	void OnSelect(void) {
 		std::string data;
 		if(UpdatesCtl.CheckRedLua(data))
 			CreateUpdateAlert(GetMenu()->GetController(), data);
@@ -21,7 +21,7 @@ public:
 };
 
 class MenuItemUpdateDB : public MenuItemDefault {
-	virtual void OnSelect(void) {
+	void OnSelect(void) {
 		std::string err;
 		if(UpdatesCtl.CheckNativeDB(err, IsKeyDown(VK_CONTROL))) {
 			NativeDB::Returns ret;

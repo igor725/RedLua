@@ -6,7 +6,7 @@
 class MenuItemLink : public MenuItemDefault {
 	string m_link;
 
-	virtual void OnSelect() {
+	void OnSelect() {
 		ShellExecute(0, 0, m_link.c_str(), 0, 0, SW_SHOW);
 		SetStatusText("Link will be opened in your default browser in a few moments...");
 	}
@@ -20,7 +20,6 @@ class MenuTemporary : public MenuBase
 {
 	void OnPop(void)
 	{
-		GetController()->UnregisterMenu(this);
 		delete this;
 	}
 

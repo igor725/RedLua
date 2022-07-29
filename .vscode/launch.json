@@ -5,7 +5,7 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "D:\\LuaJIT\\src\\LuaJIT.exe",
-			"args": ["sl_test.lua"],
+			"args": ["-lRedLua.native"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}\\objs\\outputRDR2\\",
 			"environment": [],

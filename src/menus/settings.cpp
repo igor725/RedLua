@@ -10,7 +10,7 @@ class MenuItemSSwitch : public MenuItemSwitchable {
 	std::string m_field;
 	bool m_initial;
 
-	virtual void OnSelect() {
+	void OnSelect() {
 		SetState(Settings.Switch(m_field, m_initial));
 	}
 
@@ -21,7 +21,7 @@ public:
 };
 
 class MenuItemReloadDB : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		NativeDB::Returns ret;
 		if((ret = Natives.Load()) == NativeDB::Returns::NLOAD_OK)
 			SetStatusText("Natives database has been reloaded");
@@ -37,7 +37,7 @@ public:
 class MenuItemToggleAll : public MenuItemDefault {
 	bool m_state = true;
 
-	virtual void OnSelect() {
+	void OnSelect() {
 		SetStatusText((m_state = !m_state) ? "All scripts were running" : "All scripts have been stopped");
 		for(auto &s : Scripts)
 			s.second->SetEnabled(m_state);
@@ -49,7 +49,7 @@ public:
 };
 
 class MenuItemReloadAll : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		SetStatusText("All scripts were reloaded");
 		for(auto &s : Scripts)
 			s.second->Load();
@@ -61,7 +61,7 @@ public:
 };
 
 class MenuItemUnloadAll : public MenuItemDefault {
-	virtual void OnSelect() {
+	void OnSelect() {
 		SetStatusText("All scripts were unloaded");
 		for (auto it = Scripts.begin(); it != Scripts.end();) {
 			delete it->second;

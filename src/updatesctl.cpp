@@ -7,9 +7,6 @@
 #include <WinInet.h>
 #include <string>
 
-#pragma comment(lib, "delayimp")
-#pragma comment(lib, "WinInet")
-
 UpdatesController UpdatesCtl;
 using json = nlohmann::json;
 
@@ -30,7 +27,8 @@ static HINTERNET hInternet = NULL;
 
 bool UpdatesController::Prepare(void) {
 	if(!hInternet)
-		hInternet = InternetOpen("RL/1.0", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+		hInternet = InternetOpen(REDLUA_NAME "/" REDLUA_VERSION, INTERNET_OPEN_TYPE_PRECONFIG,
+			NULL, NULL, 0);
 	return hInternet != NULL;
 }
 

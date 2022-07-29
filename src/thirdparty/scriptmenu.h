@@ -9,7 +9,7 @@
 #include "scripthook.hpp"
 #include "constants.hpp"
 
-#include "natives.h"
+#include "natives.hpp"
 #include "settingsctl.hpp"
 
 #include "keyboard.h"
@@ -190,11 +190,8 @@ public:
 		: m_itemTitle(itemTitle),
 		  m_activeLineIndex(0),
 		  m_activeScreenIndex(0) {}
-	~MenuBase()
-	{
-		for each (auto item in m_items)
-			delete item;
-	}
+	~MenuBase();
+
 	void AddItem(MenuItemBase *item) { item->SetMenu(this); m_items.push_back(item); }
 	int GetActiveItemIndex() { return m_activeScreenIndex * MenuBase_linesPerScreen + m_activeLineIndex; }
 	void OnDraw();
@@ -242,7 +239,6 @@ public:
 #endif
 	}
 };
-
 
 class MenuController
 {
@@ -310,6 +306,12 @@ public:
 			if (m_menuList[i] == menu)
 			{
 				m_menuList.erase(m_menuList.begin() + i);
+				size_t stackSize = m_menuStack.size();
+				if (stackSize > 0) {
+					for (size_t j = stackSize - 1; j > 0; j--)
+						if (!IsMenuRegistered(m_menuStack[j]))
+							m_menuStack.erase(m_menuStack.begin() + j);
+				}
 				break;
 			}
 		}
