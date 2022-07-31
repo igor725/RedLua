@@ -1,13 +1,13 @@
-# Lua scripting mod for Red Dead Redemption 2
+# Lua scripting mod for RDR2/GTAV [![Build Status](https://github.com/igor725/RedLua/actions/workflows/release.yml/badge.svg)](https://github.com/igor725/RedLua/actions/workflows/release.yml)
 
-RedLua is a ScriptHookRDR2 library that simplifies the game modding process.
+RedLua is a AB ScriptHook library that simplifies the game modding process.
 
 ## Installation
 
-Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder (must be writeable). **Note that the RedLua won't work without the [ScriptHookRDR2](https://www.dev-c.com/rdr2/scripthookrdr2/) library!**
+Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder (must be writeable). **Note that the RedLua won't work without the ScriptHook[RDR2](https://www.dev-c.com/rdr2/scripthookrdr2/)/[V](http://www.dev-c.com/gtav/scripthookv/) library!**
 
 ## Usage
-Press **F7** (hotkey can be modified in the `Settings.json` file, keycodes can be found [here](https://cherrytree.at/misc/vk.htm)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
+In **RDR2** press **F7**, in **GTAV** default bind is **F4** (you can change the default hotkey in `<Your game directory>\RedLua\Settings.json` file, keycodes available [here](https://cherrytree.at/misc/vk.htm)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
 
 RedLua uses the [**Easylogging++**](https://github.com/amrayn/easyloggingpp#configuration) library, so if you want to configure the logger, just navigate to `<Your game directory>\RedLua\` and create a file called `Log.conf` with following contents:
 ```conf
