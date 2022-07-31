@@ -1,5 +1,6 @@
 #include "position.hpp"
 #include "settingsctl.hpp"
+#include "lang.hpp"
 
 class MenuItemPosition : public MenuItemDefault {
 	void OnSelect() {
@@ -17,12 +18,12 @@ public:
 };
 
 MenuBase *CreatePositionMenu(MenuController *controller) {
-	auto menu = new MenuBase(new MenuItemTitle("RedLua Settings"));
+	auto menu = new MenuBase(new MenuItemTitle(Lng.Get("core.setts.pos")));
 	controller->RegisterMenu(menu);
 
-	menu->AddItem(new MenuItemPosition("Left", 0));
-	menu->AddItem(new MenuItemPosition("Center", 1));
-	menu->AddItem(new MenuItemPosition("Right", 2));
+	menu->AddItem(new MenuItemPosition(Lng.Get("core.pos.left"), 0));
+	menu->AddItem(new MenuItemPosition(Lng.Get("core.pos.center"), 1));
+	menu->AddItem(new MenuItemPosition(Lng.Get("core.pos.right"), 2));
 
 	return menu;
 }

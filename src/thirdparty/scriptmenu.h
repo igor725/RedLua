@@ -190,7 +190,7 @@ public:
 		: m_itemTitle(itemTitle),
 		  m_activeLineIndex(0),
 		  m_activeScreenIndex(0) {}
-	~MenuBase();
+	virtual ~MenuBase();
 
 	void AddItem(MenuItemBase *item) { item->SetMenu(this); m_items.push_back(item); }
 	int GetActiveItemIndex() { return m_activeScreenIndex * MenuBase_linesPerScreen + m_activeLineIndex; }
@@ -247,6 +247,8 @@ class MenuController
 
 	DWORD	m_inputTurnOnTime;
 	DWORD   m_currentMenuPosition;
+	
+	bool    m_rebuildRequested;
 
 	void InputWait(int ms)		{	m_inputTurnOnTime = GetTickCount() + ms; }
 	bool InputIsOnWait()		{	return m_inputTurnOnTime > GetTickCount(); }
@@ -272,19 +274,23 @@ class MenuController
 public:
 	MenuController()
 		: m_inputTurnOnTime(0),
-		  m_currentMenuPosition(0) {}
+		  m_currentMenuPosition(0),
+		  m_rebuildRequested(true) {}
 	~MenuController()
 	{
 		for each (auto menu in m_menuList)
 			delete menu;
 	}
 	DWORD GetCurrentPosition()    	{	return m_currentMenuPosition; }
-	void SetCurrentPosition(DWORD v) { m_currentMenuPosition = v % 3; }
+	void SetCurrentPosition(DWORD v) {  m_currentMenuPosition = v % 3; }
 	bool HasActiveMenu()			{	return m_menuStack.size() > 0; }
 	void PushMenu(MenuBase *menu)	{	if (IsMenuRegistered(menu)) m_menuStack.push_back(menu); }
 	void PopMenu()					{   if (m_menuStack.size()) { m_menuStack.back()->OnPop(); m_menuStack.pop_back(); } }
-	void PopMenu(size_t count)      {   if(count == 0) count = m_menuStack.size(); for(size_t i = 0; i < count; i++) PopMenu(); }
+	void PopMenu(size_t count)      {   if (count == 0) count = m_menuStack.size(); for (size_t i = 0; i < count; i++) PopMenu(); }
 	void SetStatusText(string text, int ms) { NATIVES::NOTIFY(1, ms, text.c_str()); }
+	bool IsRebuildRequested()       {   return m_rebuildRequested; }
+	void RequestRebuild()           {   m_rebuildRequested = true; }
+	void RebuildDone()              {   m_rebuildRequested = false; }
 	bool IsMenuRegistered(MenuBase *menu)
 	{
 		for (size_t i = 0; i < m_menuList.size(); i++)
@@ -308,12 +314,20 @@ public:
 				m_menuList.erase(m_menuList.begin() + i);
 				size_t stackSize = m_menuStack.size();
 				if (stackSize > 0) {
-					for (size_t j = stackSize - 1; j > 0; j--)
+					for (size_t j = stackSize - 2; j > 0; j--)
 						if (!IsMenuRegistered(m_menuStack[j]))
 							m_menuStack.erase(m_menuStack.begin() + j);
 				}
 				break;
 			}
+		}
+	}
+	void UnregisterAll()
+	{
+		m_menuStack.clear();
+		for (size_t i = 0; i < m_menuList.size(); i++) {
+			delete m_menuList.back();
+			m_menuList.pop_back();
 		}
 	}
 	void Update()

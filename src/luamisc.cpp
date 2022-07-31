@@ -98,8 +98,8 @@ static luaL_Reg misclib[] = {
 };
 
 int luaopen_misc(lua_State *L) {
-	for(int i = 0; i < 256; i++) {
-		if(KeyNames[i]) {
+	for (int i = 0; i < 256; i++) {
+		if (KeyNames[i]) {
 			lua_pushinteger(L, i);
 			lua_setglobal(L, KeyNames[i]);
 		}

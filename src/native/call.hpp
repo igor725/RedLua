@@ -16,9 +16,9 @@ static int native_prepare_arg_error(lua_State *L, NativeParam *param, int idx) {
 static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
 	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
 
-	if(vector_allowed && no->hdr.type == NTYPE_VECTOR3) {
+	if (vector_allowed && no->hdr.type == NTYPE_VECTOR3) {
 		auto vec = (float *)NATIVEOBJECT_GETPTR(no);
-		for(auto i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
 			nativePush(vec[i * 2]);
 		return 3;
 	}
@@ -26,12 +26,12 @@ static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_all
 	NativeTypeInfo &nti_obj = get_type_info(no->hdr.type),
 	&nti_param = get_type_info(param->type);
 
-	if(!param || IS_NATIVETYPES_EQU(param->type, nti_param, no->hdr.type, nti_obj)) {
-		if(param ? (param->isPointer == no->hdr.isPointer) : no->hdr.isPointer)
+	if (!param || IS_NATIVETYPES_EQU(param->type, nti_param, no->hdr.type, nti_obj)) {
+		if (param ? (param->isPointer == no->hdr.isPointer) : no->hdr.isPointer)
 			return (nativePush(no->content.nd), 1);
-		else if(!param || param->isPointer)
+		else if (!param || param->isPointer)
 			return (nativePush(&no->content.nd), 1);
-		else if(no->hdr.isPointer)
+		else if (no->hdr.isPointer)
 			return (nativePush(*no->content.pp), 1);
 	}
 
@@ -43,31 +43,31 @@ static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allo
 
 	switch(lua_type(L, idx)) {
 		case LUA_TNIL:
-			if(!param || param->isPointer)
+			if (!param || param->isPointer)
 				return (nativePush(nullptr), 1);
 			break;
 		case LUA_TBOOLEAN:
-			if(!param || (param->type == NTYPE_BOOL && !param->isPointer))
+			if (!param || (param->type == NTYPE_BOOL && !param->isPointer))
 				return (nativePush(lua_toboolean(L, idx)), 1);
 
 			break;
 		case LUA_TNUMBER:
-			if(!param || !param->isPointer) {
+			if (!param || !param->isPointer) {
 				temp = (float)lua_tonumber(L, idx);
-				if(param->type == NTYPE_FLOAT)
+				if (param->type == NTYPE_FLOAT)
 					return (nativePush(temp), 1);
-				else if(param->type == NTYPE_INT || param->type == NTYPE_HASH)
+				else if (param->type == NTYPE_INT || param->type == NTYPE_HASH)
 					return (nativePush((int)temp), 1);
 			}
 			break;
 		case LUA_TSTRING:
-			if((!param || param->type == NTYPE_CHAR && param->isPointer /*&&param->isConst*/))
+			if ((!param || param->type == NTYPE_CHAR && param->isPointer /*&&param->isConst*/))
 				return (nativePush(lua_tostring(L, idx)), 1);
 			break;
 		case LUA_TUSERDATA:
 			return native_prepare_nobj(L, param, vector_allowed, idx);
 		case 10/*LUA_TCDATA*/:
-			if(!param || (param->type == NTYPE_ANY && param->isPointer))
+			if (!param || (param->type == NTYPE_ANY && param->isPointer))
 				return (nativePush(lua_topointer(L, idx)), 1);
 			break;
 	}
@@ -79,8 +79,8 @@ static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 	int methargs = (int)meth->params.size(), idx = 3;
 	int iend = (meth->isVararg && (nargs > methargs)) ? nargs : methargs;
 	nativeInit(meth->hash);
-	for(int i = 0; i < iend; idx++) {
-		if((idx - nargs) == 3) luaL_error(L, "insufficient arguments (%d expected, got %d)", iend, i);
+	for (int i = 0; i < iend; idx++) {
+		if ((idx - nargs) == 3) luaL_error(L, "insufficient arguments (%d expected, got %d)", iend, i);
 		bool vector_allowed = (methargs - i >= 3) && meth->params[i].type == NTYPE_FLOAT &&
 			meth->params[i + 1].type == NTYPE_FLOAT && meth->params[i + 2].type == NTYPE_FLOAT;
 		i += native_prepare_arg(L, (i < methargs ? &meth->params[i] : nullptr), vector_allowed, idx);
@@ -89,10 +89,10 @@ static void native_prepare(lua_State *L, NativeMeth *meth, int nargs) {
 
 static int native_perform(lua_State *L, NativeMeth *meth) {
 	PUINT64 ret = nativeCall();
-	if(meth->returns == NTYPE_VOID || meth->returns == NTYPE_UNKNOWN)
+	if (meth->returns == NTYPE_VOID || meth->returns == NTYPE_UNKNOWN)
 		return 0;
 
-	if(!meth->isRetPtr) {
+	if (!meth->isRetPtr) {
 		switch(meth->returns) {
 			case NTYPE_INT:
 			case NTYPE_ANY:
@@ -155,7 +155,7 @@ static int nspace_index(lua_State *L) {
 		(NativeNamespace *)lua_touserdata(L, -1),
 		lua_tostring(L, 2)
 	);
-	if(meth == nullptr) {
+	if (meth == nullptr) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -175,9 +175,9 @@ static const luaL_Reg nspacemeta[] = {
 static int global_index(lua_State *L) {
 	lua_pushvalue(L, 2);
 	lua_rawget(L, LUA_GLOBALSINDEX);
-	if(lua_isnil(L, -1) && lua_type(L, 2) == LUA_TSTRING) {
+	if (lua_isnil(L, -1) && lua_type(L, 2) == LUA_TSTRING) {
 		auto nspace = Natives.GetNamespace(lua_tostring(L, 2));
-		if(nspace == nullptr) return 1; // Возвращаем тот nil, что нам дал rawget выше
+		if (nspace == nullptr) return 1; // Возвращаем тот nil, что нам дал rawget выше
 
 		lua_pop(L, 1);
 		lua_getfield(L, LUA_REGISTRYINDEX, "REDLUA_NAMESPACE");

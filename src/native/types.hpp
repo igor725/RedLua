@@ -71,15 +71,15 @@ typedef std::map<NativeType, NativeTypeInfo> NativeTypeMap;
 extern NativeTypeMap NativeTypes;
 
 static NativeTypeInfo &get_type_info(NativeType id) {
-	if(NativeTypes.find(id) == NativeTypes.end())
-		return NativeTypes[NTYPE_UNKNOWN];
-	return NativeTypes[id];
+	for (auto &it : NativeTypes)
+		if (it.first == id) return it.second;
+	return NativeTypes[NTYPE_UNKNOWN];
 }
 
 static NativeType get_type(std::string &name) {
-	for(auto &i : NativeTypes) {
-		if(i.second.name == name)
-			return i.first;
+	for (auto &it : NativeTypes) {
+		if (it.second.name == name)
+			return it.first;
 	}
 
 	return NTYPE_UNKNOWN;

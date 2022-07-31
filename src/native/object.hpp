@@ -29,10 +29,8 @@ static NativeObject *push_uncached_fullcopy
 	auto no = (NativeObject *)lua_newuserdata(L, NATIVEOBJECT_HDRSIZE + nti.size * count);
 	NATIVEOBJECT_INIT(no, type, false, false, count, 0);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
-	if(ptr)
-		memcpy(&no->content, ptr, nti.size * count);
-	else
-		memset(&no->content, 0, nti.size * count);
+	if (ptr) memcpy(&no->content, ptr, nti.size * count);
+	else memset(&no->content, 0, nti.size * count);
 
 	return no;
 }
@@ -45,7 +43,7 @@ static NativeObject *push_cached_lightobjectlink
 ) {
 	int cached = 0;
 	NativeCache *cache = get_native_cache(L, cache_ref);
-	if(search_in_cache(L, cache, &cache_id, type, -1, &cached))
+	if (search_in_cache(L, cache, &cache_id, type, -1, &cached))
 		return (NativeObject *)lua_touserdata(L, -1);
 
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
@@ -64,7 +62,7 @@ static NativeObject *push_cached_fullobject
 ) {
 	int cached = 0;
 	NativeCache *cache = get_native_cache(L, cache_ref);
-	if(search_in_cache(L, cache, &cache_id, type, id, &cached))
+	if (search_in_cache(L, cache, &cache_id, type, id, &cached))
 		return (NativeObject *)lua_touserdata(L, -1);
 
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
@@ -77,10 +75,10 @@ static NativeObject *push_cached_fullobject
 
 static NativeObject *native_check(lua_State *L, int idx, NativeType type) {
 	auto no = (NativeObject *)luaL_checkudata(L, idx, LUANATIVE_OBJECT);
-	if(type != NTYPE_UNKNOWN) {
+	if (type != NTYPE_UNKNOWN) {
 		NativeTypeInfo &nti_got = get_type_info(no->hdr.type),
 		&nti_exp = get_type_info(type);
-		if(!IS_NATIVETYPES_EQU(type, nti_exp, no->hdr.type, nti_got)) {
+		if (!IS_NATIVETYPES_EQU(type, nti_exp, no->hdr.type, nti_got)) {
 			auto msg = lua_pushfstring(L, "%s expected, got %s",
 			nti_exp.name.c_str(), nti_got.name.c_str());
 			luaL_argerror(L, idx, msg);
@@ -122,7 +120,7 @@ static int vector_newindex(lua_State *L, NativeObject *no, char idx) {
 }
 
 static int vector_index(lua_State *L, NativeObject *no, char idx) {
-	if(no->hdr.type != NTYPE_VECTOR3) return 0;
+	if (no->hdr.type != NTYPE_VECTOR3) return 0;
 	auto nv = (Vector3 *)NATIVEOBJECT_GETPTR(no);
 
 	switch(idx) {
@@ -153,13 +151,13 @@ static int native_topointer(lua_State *L) {
 
 static int native_tostring(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	if(no->hdr.type == NTYPE_VECTOR3  && no->hdr.count == 1)
+	if (no->hdr.type == NTYPE_VECTOR3  && no->hdr.count == 1)
 		return vector_tostring(L, no);
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
 
-	if(no->hdr.count != NOBJCOUNT_UNKNOWN && no->hdr.count > 1)
+	if (no->hdr.count != NOBJCOUNT_UNKNOWN && no->hdr.count > 1)
 		lua_pushfstring(L, "%s[%d]: %p", nti.name.c_str(), no->hdr.count, &no->content);
-	else if(no->hdr.isPointer)
+	else if (no->hdr.isPointer)
 		lua_pushfstring(L, "%s*: %p", nti.name.c_str(), no->content.p);
 	else
 		lua_pushfstring(L, "%s: %d", nti.name.c_str(), no->content.i32);
@@ -170,7 +168,7 @@ static int native_tostring(lua_State *L) {
 static int native_newindex(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
 	luaL_argcheck(L, !no->hdr.isReadOnly, 1, "readonly object");
-	if(lua_type(L, 2) == LUA_TSTRING && no->hdr.type == NTYPE_VECTOR3)
+	if (lua_type(L, 2) == LUA_TSTRING && no->hdr.type == NTYPE_VECTOR3)
 		return vector_newindex(L, no, *lua_tostring(L, 2));
 	uint idx = (uint)luaL_checkinteger(L, 2);
 	luaL_argcheck(L, idx < no->hdr.count, 2, "out of bounds");
@@ -204,7 +202,7 @@ static int native_newindex(lua_State *L) {
 
 static int native_index(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	if(lua_type(L, 2) == LUA_TSTRING) {
+	if (lua_type(L, 2) == LUA_TSTRING) {
 		const char *str = lua_tostring(L, 2);
 		return vector_index(L, no, *str) || luaL_getmetafield(L, 1, lua_tostring(L, 2));
 	}
@@ -228,7 +226,7 @@ static int native_index(lua_State *L) {
 			lua_pushlstring(L, (char *)ptr, 1);
 			return 1;
 		default:
-			if(no->hdr.ownCache == 0) {
+			if (no->hdr.ownCache == 0) {
 				create_luacache(L);
 				no->hdr.ownCache = luaL_ref(L, LUA_REGISTRYINDEX);
 			}

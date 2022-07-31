@@ -4,11 +4,12 @@
 #include "menus\about.hpp"
 #include "constants.hpp"
 #include "base.hpp"
+#include "lang.hpp"
 
 class MenuItemScripts : public MenuItemDefault {
 	void OnSelect() {
-		if(auto menu = GetMenu())
-			if(auto controller = menu->GetController()) {
+		if (auto menu = GetMenu())
+			if (auto controller = menu->GetController()) {
 				auto scrmenu = CreateScriptsList(controller);
 				controller->PushMenu(scrmenu);
 			}
@@ -21,10 +22,10 @@ public:
 
 class MenuItemUpdates : public MenuItemDefault {
 	void OnSelect() {
-		if(RedLuaScanScripts())
-			SetStatusText("Scripts list updated");
+		if (RedLuaScanScripts())
+			SetStatusText(Lng.Get("core.setts.nfy.srlsc"));
 		else
-			SetStatusText("Failed to iterate scripts directory");
+			SetStatusText(Lng.Get("core.setts.nfy.srlfl"));
 	}
 
 public:
@@ -36,10 +37,10 @@ MenuBase *CreateMainMenu(MenuController *controller) {
 	auto menu = new MenuBase(new MenuItemTitle(REDLUA_FULLNAME));
 	controller->RegisterMenu(menu);
 
-	menu->AddItem(new MenuItemScripts("Scripts"));
-	menu->AddItem(new MenuItemUpdates("Refresh scripts"));
-	menu->AddItem(new MenuItemMenu("Settings", CreateSettings(controller)));
-	menu->AddItem(new MenuItemMenu("About", CreateAbout(controller)));
+	menu->AddItem(new MenuItemScripts(Lng.Get("core.main.scripts")));
+	menu->AddItem(new MenuItemUpdates(Lng.Get("core.main.refr")));
+	menu->AddItem(new MenuItemMenu(Lng.Get("core.main.setts"), CreateSettings(controller)));
+	menu->AddItem(new MenuItemMenu(Lng.Get("core.main.about"), CreateAbout(controller)));
 
 	return menu;
 }

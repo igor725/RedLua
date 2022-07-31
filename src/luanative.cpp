@@ -19,9 +19,9 @@ static int native_call(lua_State *L) {
 
 static int native_info(lua_State *L) {
 	auto nspace = Natives.GetNamespace(luaL_checkstring(L, 1));
-	if(nspace == nullptr) return 0;
+	if (nspace == nullptr) return 0;
 	auto meth = Natives.GetMethod(nspace, luaL_checkstring(L, 2));
-	if(meth == nullptr) return 0;
+	if (meth == nullptr) return 0;
 
 	lua_createtable(L, 0, 4);
 	lua_pushfstring(L, "%p", meth->hash);
@@ -32,9 +32,9 @@ static int native_info(lua_State *L) {
 	lua_setfield(L, -2, "returns");
 
 	int argc = (int)meth->params.size();
-	if(argc > 0) {
+	if (argc > 0) {
 		lua_createtable(L, argc, 0);
-		for(int i = 0; i < argc; i++) {
+		for (int i = 0; i < argc; i++) {
 			NativeParam &param = meth->params[i];
 			lua_createtable(L, 0, 2);
 			lua_pushstring(L, get_type_info(param.type).name.c_str());
@@ -56,7 +56,7 @@ static int native_new(lua_State *L) {
 	auto type = get_type(stype);
 	luaL_argcheck(L, type != NTYPE_UNKNOWN, 1, "invalid type");
 	NativeData *ptr = nullptr;
-	if(lua_type(L, 3) == 10/*LUA_TCDATA*/)
+	if (lua_type(L, 3) == 10/*LUA_TCDATA*/)
 		ptr = (NativeData *)lua_topointer(L, 3);
 
 	push_uncached_fullcopy(L, type, ptr, (uint)count);

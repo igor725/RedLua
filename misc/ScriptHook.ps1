@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop";
 
 $SCR_DIR = $(Split-Path $MyInvocation.MyCommand.Path -Parent)
-if($args[0] -eq "gtav") {
+if ($args[0] -eq "gtav") {
 	$VARIANT = "V"
 	$LINK = "/gtav/scripthookv/"
 } else {
@@ -17,16 +17,16 @@ $FILES = @(
 	"inc/types.h", "readme.txt", "lib/ScriptHook$($VARIANT).lib"
 )
 
-if(Test-Path -PathType Container $SHOOK_DIR) {
+if (Test-Path -PathType Container $SHOOK_DIR) {
 	$corrupted = $false
 
 	Foreach($item in $FILES) {
-		if(!(Test-Path "$SHOOK_DIR/$item")) {
+		if (!(Test-Path "$SHOOK_DIR/$item")) {
 			$corrupted = $true;
 			break
 		}
 	}
-	if($corrupted -eq $false) {
+	if ($corrupted -eq $false) {
 		Exit 0
 	}
 
@@ -53,7 +53,7 @@ $HEADERS = @{
 }
 
 Foreach($elem in (Invoke-WebRequest -URI ($DOMAIN + $LINK)).Links.Href) {
-	if($elem.IndexOf("ScriptHook$($VARIANT)_SDK") -ige 0) {
+	if ($elem.IndexOf("ScriptHook$($VARIANT)_SDK") -ige 0) {
 		$outFile = "$SCR_DIR/temp.zip";
 		Invoke-WebRequest -Uri ($DOMAIN + $elem) -OutFile $outFile -Headers $HEADERS
 		Add-Type -Assembly System.IO.Compression.FileSystem
@@ -61,8 +61,8 @@ Foreach($elem in (Invoke-WebRequest -URI ($DOMAIN + $LINK)).Links.Href) {
 		New-Item -ItemType Directory -Path $SHOOK_DIR
 		Foreach($ent in $zip.Entries) {
 			$fileName = $ent.FullName
-			if($FILES.Contains($fileName)) {
-				if($fileName.Substring($fileName.Length - 1) -eq '/') {
+			if ($FILES.Contains($fileName)) {
+				if ($fileName.Substring($fileName.Length - 1) -eq '/') {
 					New-Item -ItemType Directory -Path "$SHOOK_DIR\$filename"
 					Continue
 				}

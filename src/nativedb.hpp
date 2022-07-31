@@ -9,33 +9,33 @@ class NativeDB {
 
 public:
 	enum Returns {
-		NLOAD_OK,
-		NLOAD_OPEN_FILE,
-		NLOAD_MALFORMED_FILE,
-		NLOAD_NAMESPACE_NONOBJECT,
-		NLOAD_METHOD_NONOBJECT,
-		NLOAD_METHOD_NONSTRING_NAME,
-		NLOAD_METHOD_INVALID_RETURN_TYPE,
-		NLOAD_METHOD_NONSTRING_RETURN_TYPE,
-		NLOAD_METHOD_PARAM_INVALID_TYPE,
-		NLOAD_METHOD_PARAM_NONSTRING_TYPE,
-		NLOAD_METHOD_PARAM_NONSTRING_NAME,
-		NLOAD_METHOD_PARAM_NONOBJECT,
-		NLOAD_METHOD_PARAMS_NONARRAY,
+		OK,
+		ERR_OPEN_FILE,
+		ERR_MALFORMED_FILE,
+		ERR_NAMESPACE_NONOBJECT,
+		ERR_METHOD_NONOBJECT,
+		ERR_METHOD_NONSTRING_NAME,
+		ERR_METHOD_INVALID_RETURN_TYPE,
+		ERR_METHOD_NONSTRING_RETURN_TYPE,
+		ERR_METHOD_PARAM_INVALID_TYPE,
+		ERR_METHOD_PARAM_NONSTRING_TYPE,
+		ERR_METHOD_PARAM_NONSTRING_NAME,
+		ERR_METHOD_PARAM_NONOBJECT,
+		ERR_METHOD_PARAMS_NONARRAY,
 	};
 
 	virtual Returns Load(void);
 
 	NativeNamespace *GetNamespace(std::string nspace) {
-		if(m_db.find(nspace) == m_db.end())
-			return nullptr;
-		return &m_db[nspace];
+		for (auto &it : m_db)
+			if (it.first == nspace) return &it.second;
+		return nullptr;
 	}
 
 	NativeMeth *GetMethod(NativeNamespace *nspace, std::string method) {
-		if((*nspace).find(method) == (*nspace).end())
-			return nullptr;
-		return &(*nspace)[method];
+		for (auto &it : (*nspace))
+			if (it.first == method) return &it.second;
+		return nullptr;
 	}
 
 	uint GetMethodCount(void) {

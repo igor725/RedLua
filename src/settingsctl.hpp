@@ -13,14 +13,15 @@ class SettingsController {
 
 public:
 	SettingsController(std::string file)
-		: m_file(file) { if(!Load()) Save(); };
+		: m_file(file) { if (!Load()) Save(); };
 
 	bool Load(void) {
 		std::ifstream jfile(m_file);
-		if(jfile.is_open()) {
-			if(!(m_data = nlohmann::json::parse(jfile, nullptr, false)).is_discarded())
-				if(m_modified = !m_data.is_object()) m_data = {
+		if (jfile.is_open()) {
+			if (!(m_data = nlohmann::json::parse(jfile, nullptr, false)).is_discarded())
+				if (m_modified = !m_data.is_object()) m_data = {
 					{"menu_hotkey", REDLUA_HOTKEY_DEFAULT},
+					{"menu_language", "ingame"},
 					{"menu_position", 0},
 					{"auto_updates", false},
 					{"autorun", false},
@@ -34,7 +35,7 @@ public:
 	}
 
 	std::string &Read(std::string name, std::string &def) {
-		if(m_data[name].is_string())
+		if (m_data[name].is_string())
 			m_data[name].get_to(def);
 		else
 			Write(name, def);
@@ -42,7 +43,7 @@ public:
 	}
 
 	int Read(std::string name, int def) {
-		if(m_data[name].is_number())
+		if (m_data[name].is_number())
 			m_data[name].get_to(def);
 		else
 			Write(name, def);
@@ -50,7 +51,7 @@ public:
 	}
 
 	bool Read(std::string name, bool def) {
-		if(m_data[name].is_boolean())
+		if (m_data[name].is_boolean())
 			m_data[name].get_to(def);
 		else
 			Write(name, def);
@@ -70,9 +71,9 @@ public:
 	}
 
 	bool Save(void) {
-		if(!m_modified) return true;
+		if (!m_modified) return true;
 		std::ofstream jfile(m_file);
-		if(jfile.is_open()) {
+		if (jfile.is_open()) {
 			jfile << std::setw(4) << m_data << std::endl;
 			jfile.close();
 			return true;

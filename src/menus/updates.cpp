@@ -8,11 +8,14 @@
 
 class MenuItemUpdateRL : public MenuItemDefault {
 	void OnSelect(void) {
-		std::string data;
-		if(UpdatesCtl.CheckRedLua(data))
-			CreateUpdateAlert(GetMenu()->GetController(), data);
+		std::string newver;
+		if (auto code = UpdatesCtl.CheckRedLua(newver))
+			if (code == UpdatesController::Returns::ERR_NO_UPDATES)
+				SetStatusText(Lng.Get("core.chkupd.nfy.noup"));
+			else
+				SetStatusText(Lng.Get("core.chkupd.nfy.upfl", code));
 		else
-			SetStatusText(data);
+			CreateUpdateAlert(GetMenu()->GetController(), newver);
 	}
 
 public:
@@ -22,15 +25,17 @@ public:
 
 class MenuItemUpdateDB : public MenuItemDefault {
 	void OnSelect(void) {
-		std::string err;
-		if(UpdatesCtl.CheckNativeDB(err, IsKeyDown(VK_CONTROL))) {
-			NativeDB::Returns ret;
-			if((ret = Natives.Load()) == NativeDB::Returns::NLOAD_OK)
-				SetStatusText("NativeDB updated and reloaded successfully!");
+		if (auto code = UpdatesCtl.CheckNativeDB(IsKeyDown(VK_CONTROL))) {
+			if (code == UpdatesController::Returns::ERR_NO_UPDATES)
+				SetStatusText(Lng.Get("core.chkupd.nfy.noup"));
 			else
-				SetStatusText("Failed to reload NativeDB, error code: " + std::to_string(ret));
-		} else
-			SetStatusText(err);
+				SetStatusText(Lng.Get("core.chkupd.nfy.upfl", code));
+		} else {
+			if (auto ndbcode = Natives.Load())
+				SetStatusText(Lng.Get("core.setts.nfy.nrlfl", ndbcode));
+			else
+				SetStatusText(Lng.Get("core.setts.nfy.nrlsc"));
+		}
 	}
 
 public:
@@ -39,11 +44,11 @@ public:
 };
 
 MenuBase *CreateUpdatesMenu(MenuController *controller) {
-	auto menu = new MenuBase(new MenuItemTitle("Version manager"));
+	auto menu = new MenuBase(new MenuItemTitle(Lng.Get("core.setts.chkupd")));
 	controller->RegisterMenu(menu);
 
-	menu->AddItem(new MenuItemUpdateRL("Check for RedLua updates"));
-	menu->AddItem(new MenuItemUpdateDB("Check for NativeDB updates"));
+	menu->AddItem(new MenuItemUpdateRL(Lng.Get("core.chkupd.rl")));
+	menu->AddItem(new MenuItemUpdateDB(Lng.Get("core.chkupd.ndb")));
 
 	return menu;
 }

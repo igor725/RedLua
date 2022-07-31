@@ -1,0 +1,65 @@
+Русский
+7
+
+# Главное меню
+core.main.scripts=Скрипты
+core.main.refr=Обновить список скриптов
+core.main.setts=Настройки
+core.main.about=О RedLua
+
+# Настройки
+core.setts.autorun=Автозагрузка скриптов
+core.setts.updater=Автообновление библиотеки
+core.setts.chkupd=Проверить обновления
+core.setts.langs=Изменить язык
+core.setts.rldndb=Перезагрузить NativeDB
+core.setts.pos=Расположение меню
+core.setts.toggall=Вкл/выкл все скрипты
+core.setts.relall=Перезагрузить все скрипты
+core.setts.unlall=Выгрузить все скрипты
+
+core.setts.nfy.srlsc=Список скриптов успешно обновлён
+core.setts.nfy.srlfl=Не удалось обновить список скриптов
+core.setts.nfy.nrlsc=NativeDB успешно перезагружена
+core.setts.nfy.nrlfl=Не удалось перезагрузить NativeDB: %d
+core.setts.nfy.runall=Выполнение всех скриптов возобновлено
+core.setts.nfy.stpall=Выполнение всех скриптов приостановлено
+core.setts.nfy.unlall=Все скрпиты выгружены
+
+# Список скриптов
+core.scripts.nf=Скрипты не найдены
+
+# Управление скриптом
+core.script.state=Состояние: %s
+core.script.state1=запущен
+core.script.state2=ошибка
+core.script.state3=остановлен
+core.script.usage=Исп. ОЗУ: %.3f КБ
+core.script.rvlusage=[Показать исп. ОЗУ]
+core.script.ownmenu=Меню скрипта
+core.script.tgl=Вкл/выкл
+core.script.rel=Перезагрузить
+core.script.unl=Выгрузить
+
+core.script.nfy.relsc=Скрипт успешно перезагружен
+core.script.nfy.relfl=Не удалось перезапустить скрипт
+core.script.nfy.unlsc=Скрипт выгружен успешно
+
+# Проверка обновлений
+core.chkupd.rl=Обновить RedLua
+core.chkupd.ndb=Обновить NativeDB
+core.chkupd.nfy.upfl=Поризошла ошибка при обновлении: %d
+core.updalert.nfn=Новая версия %s
+core.updalert.btn=Открыть страницу загрузки
+
+# Выбор языка
+core.langs.ingame=Язык игры
+core.langs.nfy.chsc=Язык успешно изменён
+
+# Расположение меню
+core.pos.left=Слева
+core.pos.center=По центру
+core.pos.right=Справа
+
+# Уведомления
+core.nfy.redir=Выбранная ссылка скоро будет открыта в вашем браузере

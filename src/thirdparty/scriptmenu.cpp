@@ -77,8 +77,6 @@ void MenuItemMenu::OnDraw(float lineTop, float lineLeft, bool active)
 	DrawText(lineLeft + lineWidth - lineWidth / 8, lineTop + lineHeight / 3.5f, "*");
 }
 
-
-
 void MenuItemMenu::OnSelect()
 {
 	if (auto parentMenu = GetMenu())
@@ -166,7 +164,7 @@ int MenuBase::OnInput()
 
 MenuBase::~MenuBase()
 {
-	if(m_controller)
+	if (m_controller)
 		m_controller->UnregisterMenu(this);
 	for each (auto item in m_items)
 		delete item;

@@ -11,8 +11,9 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 	switch(dwReason) {
 		case DLL_PROCESS_ATTACH:
 			tryagain:
-			if(!EnsureDirectory(REDLUA_ROOT_DIR)
+			if (!EnsureDirectory(REDLUA_ROOT_DIR)
 			|| !EnsureDirectory(REDLUA_SCRIPTS_DIR)
+			|| !EnsureDirectory(REDLUA_LANGS_DIR)
 			|| !EnsureDirectory(REDLUA_LIBS_DIR)
 			|| !EnsureDirectory(REDLUA_CLIBS_DIR)) {
 				switch(MessageBox(NULL, "Failed to create RedLua "
@@ -35,7 +36,7 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 			keyboardHandlerRegister(OnKeyboardMessage);
 			break;
 		case DLL_PROCESS_DETACH:
-			if(registred) {
+			if (registred) {
 				scriptUnregister(hInstance);
 				keyboardHandlerUnregister(OnKeyboardMessage);
 				RedLuaFinish();

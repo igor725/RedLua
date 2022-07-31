@@ -1,6 +1,7 @@
 #include "updatesctl.hpp"
 #include "constants.hpp"
 #include "settingsctl.hpp"
+#include "lang.hpp"
 
 #include "thirdparty\json.hpp"
 #include <Windows.h>
@@ -10,49 +11,29 @@
 UpdatesController UpdatesCtl;
 using json = nlohmann::json;
 
-static const std::string errors[] = {
-	"Internal error: ",
-	"Server responded with error: ",
-	"HTTP request error: ",
-	"Malformed server response",
-
-	// Internal errors
-	"failed to initialize WinInet ",
-	"InternetOpenUrl failed ",
-	"HttpQueryInfo failed ",
-	"HttpReadFile faield "
-};
-
 static HINTERNET hInternet = NULL;
 
 bool UpdatesController::Prepare(void) {
-	if(!hInternet)
+	if (!hInternet)
 		hInternet = InternetOpen(REDLUA_NAME "/" REDLUA_VERSION, INTERNET_OPEN_TYPE_PRECONFIG,
 			NULL, NULL, 0);
 	return hInternet != NULL;
 }
 
 void UpdatesController::Stop(void) {
-	if(hInternet) InternetCloseHandle(hInternet);
+	if (hInternet) InternetCloseHandle(hInternet);
 }
 
-static HINTERNET open_request(std::string url, std::string headers) {
+static HINTERNET openRequest(std::string url, std::string headers) {
 	return InternetOpenUrl(hInternet, url.c_str(), headers.c_str(), headers.length(),
 	INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
 }
 
-static std::string build_error(int t1, int t2) {
-	std::string str = errors[t1] + errors[t2];
-	return str + std::to_string(GetLastError());
-}
+UpdatesController::Returns UpdatesController::CheckRedLua(std::string &vername) {
+	if (!Prepare()) return ERR_WININET_INIT;
 
-bool UpdatesController::CheckRedLua(std::string &ret) {
-	if(!Prepare()) {
-		ret = build_error(0, 4);
-		return false;
-	}
-
-	bool success;
+	vername = "";
+	Returns code = ERR_NO_UPDATES;
 	std::string temp;
 	static const DWORD BUFSIZE = 1024;
 	BYTE buf[BUFSIZE];
@@ -60,113 +41,118 @@ bool UpdatesController::CheckRedLua(std::string &ret) {
 
 	HINTERNET hRequest;
 	do {
-		if((hRequest = open_request(REDLUA_TAGS_URL, "Accept: application/json")) == NULL) {
-			ret = build_error(0, 5);
+		if ((hRequest = openRequest(REDLUA_TAGS_URL, "Accept: application/json")) == NULL) {
+			code = ERR_OPEN_REQUEST;
 			break;
 		}
 
-		while((success = InternetReadFile(hRequest, buf, BUFSIZE, &read)) && read > 0)
+		do {
+			if (!InternetReadFile(hRequest, buf, BUFSIZE, &read)) {
+				code = ERR_READ_RESPONSE;
+				break;
+			}
+			
 			temp.append((const char *)buf, read);
-		if(!success) {
-			ret = build_error(2, 7);
-			break;
-		}
+		} while (read > 0);
+		if (code != ERR_NO_UPDATES) break;
 
 		json jdata = json::parse(temp, nullptr, false);
-		if(jdata.is_discarded()) {
-			ret = errors[2] + errors[3];
-			success = false;
+		if (jdata.is_discarded()) {
+			code = ERR_MALFORMED_JSON;
 			break;
 		}
 
 		int curr_rel = -1;
-		if(jdata.is_array()) {
-			for(auto &x : jdata.items()) {
+		if (jdata.is_array()) {
+			for (auto &x : jdata.items()) {
 				json &jname = x.value()["name"];
-				if(jname.is_string()) {
+				if (jname.is_string()) {
 					int vidx = std::strtoul(x.key().c_str(), nullptr, 10);
-					if(jname.get_to(temp) == REDLUA_VERSION)
+					if (jname.get_to(temp) == REDLUA_VERSION)
 						curr_rel = vidx;
-					if(vidx == 0)
-						ret = temp;
+					if (vidx == 0)
+						vername = temp;
 				}
 			}
-		} else if(jdata.is_object() && jdata["message"].is_string()) {
-			ret = errors[1] + jdata["message"].get_to(temp);
-			success = false;
+		} else if (jdata.is_object() && jdata["message"].is_string()) {
+			code = ERR_MALFORMED_JSON;
 			break;
 		}
 
-		success = curr_rel != 0 && ret != "";
-	} while(0);
+		if (curr_rel != 0 && vername != "")
+			code = OK;
+		else if (curr_rel == 0)
+			code = ERR_NO_UPDATES;
+
+	} while (0);
 
 	InternetCloseHandle(hRequest);
-	return success;
+	return code;
 }
 
-bool UpdatesController::CheckNativeDB(std::string &ret, bool force_update) {
-	if(!Prepare()) {
-		ret = errors[0] + errors[4];
-		return false;
-	}
+UpdatesController::Returns UpdatesController::CheckNativeDB(bool force_update) {
+	if (!Prepare()) return ERR_WININET_INIT;
 
-	std::string temp;
-	bool success = false;
-	static const DWORD BUFSIZE = 1024;
-	BYTE buf[BUFSIZE];
-	DWORD read = 0;
-
+	Returns code = ERR_NO_UPDATES;
 	FILE *file = NULL;
 	HINTERNET hRequest;
 
 	do {
+		static const DWORD BUFSIZE = 1024;
+		BYTE buf[BUFSIZE];
+		DWORD read = 0;
 		std::string etag = "W/\"\"",
 		headers = "Accept: application/json";
-		if(!force_update)
+
+		if (!force_update)
 			headers.append("\r\nIf-None-Match: " + Settings.Read("nativedb_etag", etag));
-		if((hRequest = open_request(REDLUA_NATIVEDB_URL, headers)) == NULL) {
-			ret = build_error(0, 5);
+		if ((hRequest = openRequest(REDLUA_NATIVEDB_URL, headers)) == NULL) {
+			code = ERR_OPEN_REQUEST;
 			break;
 		}
 
-		DWORD code = 0; DWORD codelen = sizeof(DWORD);
-		if(!HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &code, &codelen, NULL)) {
-			ret = build_error(0, 6);
+		DWORD status = 0; DWORD statuslen = sizeof(DWORD);
+		if (!HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &statuslen, NULL)) {
+			code = ERR_QUERY_INFO;
 			break;
 		}
 
-		if(code == 304) {
-			ret = "You already have the latest version of NativeDB";
+		if (status == 304)
 			break;
-		} else if(code != 200) {
-			ret = errors[2] + std::to_string(code);
+		
+		if (status != 200) {
+			code = ERR_UNKNOWN_RESPONSE;
 			break;
 		}
 
-		if((file = fopen(REDLUA_NATIVES_FILE, "w")) == NULL) {
-			ret = "Failed to open " REDLUA_NATIVES_FILE " file: " + (std::string)strerror(errno);
+		if ((file = fopen(REDLUA_NATIVES_FILE, "w")) == NULL) {
+			code = ERR_IO_ISSUE;
 			break;
 		}
 
 		DWORD bufsize = BUFSIZE;
-		if(!HttpQueryInfoA(hRequest, HTTP_QUERY_ETAG, buf, &bufsize, NULL)) {
-			ret = build_error(0, 6);
+		if (!HttpQueryInfoA(hRequest, HTTP_QUERY_ETAG, buf, &bufsize, NULL)) {
+			code = ERR_QUERY_INFO;
 			break;
 		}
 
 		etag = std::string{(const char *)buf, bufsize};
 		Settings.Write("nativedb_etag", etag);
 		int errorcode = 0;
-		while((success = InternetReadFile(hRequest, buf, BUFSIZE, &read)) && read > 0)
-			if((success = (fwrite(buf, 1, read, file) == read)) == false) {
-				errorcode = errno;
+		do {
+			if (!InternetReadFile(hRequest, buf, BUFSIZE, &read)) {
+				code = ERR_READ_RESPONSE;
 				break;
 			}
-		if(!success)
-			ret = errors[2] + std::to_string(errorcode != 0 ? errorcode : GetLastError());
-	} while(0);
+
+			if (fwrite(buf, 1, read, file) != read) {
+				code = ERR_IO_ISSUE;
+				break;
+			}
+		} while (read  > 0);
+	} while (0);
 
 	InternetCloseHandle(hRequest);
-	if(file) fclose(file);
-	return success;
+	if (file) fclose(file);
+	return code;
 }

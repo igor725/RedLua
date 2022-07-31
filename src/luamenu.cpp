@@ -3,8 +3,41 @@
 #include "thirdparty\scriptmenu.h"
 #include "thirdparty\easyloggingpp.h"
 
-class MenuItemLuaMenu : public MenuItemDefault {
-	lua_State *m_L; MenuBase *m_menu; int m_menuref;
+class MenuLua : public MenuBase {
+	MenuLua **m_self; lua_State *m_L;
+	int m_depth;
+
+public:
+	MenuLua(MenuItemTitle *title, MenuLua **self, lua_State *L, int depth)
+	: MenuBase(title), m_self(self), m_L(L), m_depth(depth) {}
+
+	~MenuLua() {
+		*m_self = nullptr;
+		if (m_depth < 1 ) {
+			lua_pushnil(m_L);
+			lua_setfield(m_L, LUA_REGISTRYINDEX, "MY_MENU_CLASS");
+		}
+	}
+
+	lua_State *GetLState(void) {
+		return m_L;
+	}
+};
+
+class MenuItemLua : public MenuItemDefault {
+
+public:
+	MenuItemLua(std::string caption)
+	: MenuItemDefault(caption) {}
+
+	lua_State *GetLState(void) {
+		return ((MenuLua *)GetMenu())->GetLState();
+	}
+};
+
+class MenuItemLuaMenu : public MenuItemLua {
+	MenuBase *m_menu; int m_menuref;
+
 	void OnSelect(void) {
 		if (auto parentMenu = GetMenu())
 			if (auto controller = parentMenu->GetController()) {
@@ -14,60 +47,64 @@ class MenuItemLuaMenu : public MenuItemDefault {
 	}
 
 public:
-	MenuItemLuaMenu(std::string title, lua_State *L, MenuBase *menu)
-	: MenuItemDefault(title), m_L(L), m_menu(menu), m_menuref(luaL_ref(L, LUA_REGISTRYINDEX)) {}
+	MenuItemLuaMenu(std::string title, lua_State *L, MenuLua *menu)
+	: MenuItemLua(title), m_menu(menu), m_menuref(luaL_ref(L, LUA_REGISTRYINDEX)) {}
 
-	~MenuItemLuaMenu(void) { luaL_unref(m_L, LUA_REGISTRYINDEX, m_menuref); }
+	~MenuItemLuaMenu(void) { luaL_unref(GetLState(), LUA_REGISTRYINDEX, m_menuref); }
 
 	eMenuItemClass GetClass() { return eMenuItemClass::Menu; }
 };
 
-class MenuItemLuaButton : public MenuItemDefault {
-	lua_State *m_L; int m_func;
+class MenuItemLuaButton : public MenuItemLua {
+	int m_func;
+
 	void OnSelect() {
-		if(m_func != LUA_REFNIL) {
-			lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_func);
-			if(lua_pcall(m_L, 0, 0, 0) != 0) {
-				NATIVES::NOTIFY(1, 1500, lua_tostring(m_L, -1));
-				lua_pop(m_L, 1);
+		if (m_func != LUA_REFNIL) {
+			lua_rawgeti(GetLState(), LUA_REGISTRYINDEX, m_func);
+			if (lua_pcall(GetLState(), 0, 0, 0) != 0) {
+				NATIVES::NOTIFY(1, 1500, lua_tostring(GetLState(), -1));
+				lua_pop(GetLState(), 1);
 			}
 		}
 	}
 
 public:
-	MenuItemLuaButton(std::string title, lua_State *L, int func)
-	: MenuItemDefault(title), m_L(L), m_func(func) {}
+	MenuItemLuaButton(std::string title, int func)
+	: MenuItemLua(title), m_func(func) {}
 
-	~MenuItemLuaButton() { luaL_unref(m_L, LUA_REGISTRYINDEX, m_func); }
+	~MenuItemLuaButton() { luaL_unref(GetLState(), LUA_REGISTRYINDEX, m_func); }
 };
 
 class MenuItemLuaSwitchable : public MenuItemSwitchable {
-	lua_State *m_L; int m_func;
-	void OnSelect() {
-		if(m_func == LUA_REFNIL)
-			SetState(!GetState());
-		else {
-			lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_func);
-			lua_pushboolean(m_L, GetState());
-			if(lua_pcall(m_L, 1, 1, 0) == 0)
-				SetState(lua_toboolean(m_L, -1));
-			else
-				NATIVES::NOTIFY(1, 1500, lua_tostring(m_L, -1));
+	int m_func;
 
-			lua_pop(m_L, 1);
+	lua_State *GetLState(void) {
+		return ((MenuLua *)GetMenu())->GetLState();
+	}
+
+	void OnSelect() {
+		if (m_func != LUA_REFNIL) {
+			lua_rawgeti(GetLState(), LUA_REGISTRYINDEX, m_func);
+			lua_pushboolean(GetLState(), GetState());
+			if (lua_pcall(GetLState(), 1, 1, 0) == 0)
+				SetState(lua_toboolean(GetLState(), -1));
+			else
+				NATIVES::NOTIFY(1, 1500, lua_tostring(GetLState(), -1));
+
+			lua_pop(GetLState(), 1);
 		}
 	}
 
 public:
-	MenuItemLuaSwitchable(std::string title, lua_State *L, int func, bool initial)
-	: MenuItemSwitchable(title, initial), m_L(L), m_func(func) {}
+	MenuItemLuaSwitchable(std::string title, int func, bool initial)
+	: MenuItemSwitchable(title, initial), m_func(func) {}
 
-	~MenuItemLuaSwitchable() { luaL_unref(m_L, LUA_REGISTRYINDEX, m_func); }
+	~MenuItemLuaSwitchable() { luaL_unref(GetLState(), LUA_REGISTRYINDEX, m_func); }
 };
 
 static int meta_gc(lua_State *L) {
 	auto menu = (MenuBase **)luaL_checkudata(L, 1, "MenuBase");
-	delete *menu;
+	if (*menu) delete *menu;
 	return 0;
 }
 
@@ -77,37 +114,37 @@ static luaL_Reg menumeta[] = {
 	{NULL, NULL}
 };
 
-static MenuBase *gen_menu(lua_State *L, int idx);
+static MenuLua *gen_menu(lua_State *L, int idx);
 
-MenuBase *gen_menu(lua_State *L, int depth) {
+MenuLua *gen_menu(lua_State *L, int depth) {
 	luaL_checktype(L, -1, LUA_TTABLE);
 	lua_getfield(L, -1, "items");
-	if(!lua_istable(L, -1)) goto error;
+	if (!lua_istable(L, -1)) goto error;
 	lua_getfield(L, -2, "islist");
 	lua_getfield(L, -3, "title");
-	if(!lua_isstring(L, -1)) goto error;
+	if (!lua_isstring(L, -1)) goto error;
 	const char *errobj = nullptr; // Строка объекта с ошибкой
 	MenuItemTitle *menutitleclass = nullptr;
-	if(lua_toboolean(L, -2)) // islist
+	if (lua_toboolean(L, -2)) // islist
 		menutitleclass = new MenuItemListTitle(lua_tostring(L, -1));
 	else
 		menutitleclass = new MenuItemTitle(lua_tostring(L, -1));
 	lua_pop(L, 2); // Удаляем из стека тайтл и булево значение
 
-	auto menu = (MenuBase **)lua_newuserdata(L, sizeof(MenuBase *));
-	if(luaL_newmetatable(L, "MenuBase"))
+	auto menu = (MenuLua **)lua_newuserdata(L, sizeof(MenuLua *));
+	if (luaL_newmetatable(L, "MenuBase"))
 		luaL_setfuncs(L, menumeta, 0);
 	lua_setmetatable(L, -2);
 
-	*menu = new MenuBase(menutitleclass);
+	*menu = new MenuLua(menutitleclass, menu, L, depth);
 	(*menu)->SetController(nullptr);
 
 	int count = (int)lua_objlen(L, -2);
-	for(int i = 1; i <= count; i++) {
+	for (int i = 1; i <= count; i++) {
 		lua_rawgeti(L, -2, i);
-		if(!lua_istable(L, -1)) goto error;
+		if (!lua_istable(L, -1)) goto error;
 		lua_getfield(L, -1, "title");
-		if(!lua_isstring(L, -1)) goto error;
+		if (!lua_isstring(L, -1)) goto error;
 		auto title = errobj = lua_tostring(L, -1);
 		lua_getfield(L, -2, "type");
 		int itype = lua_tointeger(L, -1);
@@ -115,21 +152,21 @@ MenuBase *gen_menu(lua_State *L, int depth) {
 		switch(itype) {
 			case 0: // Menu
 				lua_getfield(L, -3, "menu");
-				if(!lua_istable(L, -1)) goto error;
+				if (!lua_istable(L, -1)) goto error;
 				(*menu)->AddItem(new MenuItemLuaMenu(title, L, gen_menu(L, depth + 1)));
 				lua_pop(L, 1); // Удаляем из стека таблицу menu
 				break;
 			case 1: // Button
 				lua_getfield(L, -3, "onclick");
-				if(!lua_isfunction(L, -1) && !lua_isnil(L, -1)) goto error;
-				(*menu)->AddItem(new MenuItemLuaButton(title, L, luaL_ref(L, LUA_REGISTRYINDEX)));
+				if (!lua_isfunction(L, -1) && !lua_isnil(L, -1)) goto error;
+				(*menu)->AddItem(new MenuItemLuaButton(title, luaL_ref(L, LUA_REGISTRYINDEX)));
 				break;
 			case 2: // Switchable
 				lua_getfield(L, -3, "initial");
 				initial = lua_toboolean(L, -1);
 				lua_getfield(L, -4, "onclick");
-				if(!lua_isfunction(L, -1) && !lua_isnil(L, -1)) goto error;
-				(*menu)->AddItem(new MenuItemLuaSwitchable(title, L, luaL_ref(L, LUA_REGISTRYINDEX), initial));
+				if (!lua_isfunction(L, -1)) goto error;
+				(*menu)->AddItem(new MenuItemLuaSwitchable(title, luaL_ref(L, LUA_REGISTRYINDEX), initial));
 				lua_pop(L, 1); // Удаляем из стека initial
 				break;
 
@@ -170,7 +207,13 @@ static luaL_Reg menulib[] = {
 };
 
 int luaopen_menu(lua_State *L) {
-	// TODO: Enums
+	lua_pushinteger(L, 0);
+	lua_setglobal(L, "LUAMENU_ITEM_MENU");
+	lua_pushinteger(L, 1);
+	lua_setglobal(L, "LUAMENU_ITEM_BUTTON");
+	lua_pushinteger(L, 2);
+	lua_setglobal(L, "LUAMENU_ITEM_SWITCHABLE");
+
 	luaL_newlib(L, menulib);
 	return 1;
 }

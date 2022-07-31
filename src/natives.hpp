@@ -17,6 +17,7 @@ namespace NATIVES {
 	static void SET_TEXT_CENTRE(BOOL align) { invoke<Void>(0xC02F4DBFB51D988B, align); }
 	static void SET_TEXT_DROPSHADOW(int distance, int r, int g, int b, int a) { invoke<Void>(0x465C84BC39F1C351, distance, r, g, b, a); }
 	static void DRAW_RECT(float x, float y, float width, float height, int r, int g, int b, int a, BOOL p8, BOOL p9) { (void)p8; (void)p9; invoke<Void>(0x3A618A217E5154F0, x, y, width, height, r, g, b, a); }
+	static int GET_LOCALE(void) { return invoke<int>(0x2BDD44CC428A7EAE); }
 
 	static void NOTIFY(int type, int duration, const char *message) {
 		(void)type; (void)duration;
@@ -36,6 +37,7 @@ namespace NATIVES {
 	static void SET_TEXT_CENTRE(BOOL align) { invoke<Void>(0xBE5261939FBECB8C, align); }
 	static void SET_TEXT_DROPSHADOW(int distance, int r, int g, int b, int a) { invoke<Void>(0x1BE39DBAA7263CA5, distance, r, g, b, a); }
 	static void DRAW_RECT(float x, float y, float width, float height, int r, int g, int b, int a, BOOL p8, BOOL p9) { invoke<Void>(0x405224591DF02025, x, y, width, height, r, g, b, a, p8, p9); }
+	static int GET_LOCALE(void) { return invoke<int>(0xDB917DA5C6835FCC); }
 
 	static void NOTIFY(int type, int duration, const char *message) {
 		struct {

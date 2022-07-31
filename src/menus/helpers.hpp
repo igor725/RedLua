@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lang.hpp"
+
 #include "thirdparty\scriptmenu.h"
 #include <shellapi.h>
 
@@ -8,7 +10,7 @@ class MenuItemLink : public MenuItemDefault {
 
 	void OnSelect() {
 		ShellExecute(0, 0, m_link.c_str(), 0, 0, SW_SHOW);
-		SetStatusText("Link will be opened in your default browser in a few moments...");
+		SetStatusText(Lng.Get("core.nfy.redir"));
 	}
 
 public:

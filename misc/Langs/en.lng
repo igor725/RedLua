@@ -1,0 +1,66 @@
+English
+0
+
+# Main menu
+core.main.scripts=Scripts
+core.main.refr=Refresh scripts list
+core.main.setts=Settings
+core.main.about=About RedLua
+
+# Settings
+core.setts.autorun=Autorun feature enabled
+core.setts.updater=Check for updates at startup
+core.setts.chkupd=Check for updates
+core.setts.langs=Change language
+core.setts.rldndb=Reload NativeDB
+core.setts.pos=Change menu position
+core.setts.toggall=Toggle all scripts
+core.setts.relall=Reload all scripts
+core.setts.unlall=Unload all scripts
+
+core.setts.nfy.srlsc=Script list has been successfully updated
+core.setts.nfy.srlfl=Failed to update script list
+core.setts.nfy.nrlsc=NativeDB reloaded successfully!
+core.setts.nfy.nrlfl=Failed to reload NativeDB, error code: %d
+core.setts.nfy.runall=All scripts have been resumed
+core.setts.nfy.stpall=All scripts have been suspended
+core.setts.nfy.unlall=All scripts have been unloaded
+
+# Scripts list
+core.scripts.nf=Scripts not found
+
+# Script manager
+core.script.state=Status: %s
+core.script.state1=running
+core.script.state2=error
+core.script.state3=disabled
+core.script.usage=Usage: %.3f KB
+core.script.rvlusage=[press to show RAM usage]
+core.script.ownmenu=Script menu
+core.script.tgl=Toggle
+core.script.rel=Reload
+core.script.unl=Unload
+
+core.script.nfy.relsc=Script successfully reloaded
+core.script.nfy.relfl=Script failed to reload
+core.script.nfy.unlsc=Script successfully unloaded
+
+# Updater
+core.chkupd.rl=Check for RedLua updates
+core.chkupd.ndb=Check for NativeDB updates
+core.chkupd.nfy.noup=No updates found
+core.chkupd.nfy.upfl=Updater failed, error code: %d
+core.updalert.nfn=New version %s found
+core.updalert.btn=Go to release page
+
+# Выбор языка
+core.langs.ingame=Ingame language
+core.langs.nfy.chsc=Language changed successfully
+
+# Position
+core.pos.left=Left
+core.pos.center=Center
+core.pos.right=Right
+
+# Notifications
+core.nfy.redir=Link will be opened in your default browser in a few moments...

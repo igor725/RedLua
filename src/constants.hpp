@@ -1,8 +1,8 @@
 #pragma once
 
 #define REDLUA_NAME "RedLua"
-#define REDLUA_VERSION "v0.4.0"
-#define REDLUA_VERSION_NUM 040
+#define REDLUA_VERSION "v0.5.0"
+#define REDLUA_VERSION_NUM 050
 #define REDLUA_FULLNAME REDLUA_NAME " " REDLUA_VERSION
 
 #ifdef REDLUA_GTAV
@@ -19,6 +19,7 @@
 
 #define REDLUA_ROOT_DIR ".\\RedLua\\"
 #define REDLUA_SCRIPTS_DIR REDLUA_ROOT_DIR "Scripts\\"
+#define REDLUA_LANGS_DIR REDLUA_ROOT_DIR "Langs\\"
 #define REDLUA_LIBS_DIR "Libs\\"
 #define REDLUA_CLIBS_DIR "Libs\\C\\"
 

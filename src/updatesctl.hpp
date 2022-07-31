@@ -6,8 +6,20 @@ class UpdatesController {
 	bool Prepare(void);
 
 public:
-	bool CheckRedLua(std::string &ret);
-	bool CheckNativeDB(std::string &ret, bool force_update = false);
+	enum Returns {
+		OK,
+		ERR_WININET_INIT,
+		ERR_OPEN_REQUEST,
+		ERR_QUERY_INFO,
+		ERR_UNKNOWN_RESPONSE,
+		ERR_IO_ISSUE,
+		ERR_READ_RESPONSE,
+		ERR_MALFORMED_JSON,
+		ERR_NO_UPDATES
+	};
+
+	UpdatesController::Returns CheckRedLua(std::string &vername);
+	UpdatesController::Returns CheckNativeDB(bool force_update = false);
 	void Stop(void);
 };
 

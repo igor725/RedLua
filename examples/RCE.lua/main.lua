@@ -42,10 +42,10 @@ local index_page = [[
 		<script>
 			window.onload = () => {
 				let sessions = [];
-				for(let i = 0; i < 10; i++) {
+				for (let i = 0; i < 10; i++) {
 					let name = 'sess' + i;
 					let session = JSON.parse(localStorage.getItem(name));
-					if(session == null) {
+					if (session == null) {
 						session = {
 							annotations: [],
 							breakpoints: [],
@@ -69,7 +69,7 @@ local index_page = [[
 				}
 
 				let restoreSession = (current, id) => {
-					if(id >= sessions.length) throw "wtf dude?";
+					if (id >= sessions.length) throw "wtf dude?";
 					let saved = sessions[id];
 
 					current.removeFolds(current.getAllFolds());
@@ -110,7 +110,7 @@ local index_page = [[
 				}
 
 				let currentSession = parseInt(localStorage.getItem('sess'));
-				if(isNaN(currentSession)) currentSession = 0;
+				if (isNaN(currentSession)) currentSession = 0;
 
 				let editor = ace.edit('editor');
 				editor.focus();
@@ -178,9 +178,9 @@ local index_page = [[
 
 				keyboardJS.watch(editor_el);
 
-				for(let i = 0; i < 10; i++) {
+				for (let i = 0; i < 10; i++) {
 					keyboardJS.bind('ctrl+num' + i, (e) => {
-						if(currentSession != i) {
+						if (currentSession != i) {
 							let session = editor.getSession();
 							saveSession(session, currentSession);
 							restoreSession(session, i);
@@ -205,7 +205,7 @@ local index_page = [[
 
 				keyboardJS.bind('f5', (e) => {
 					let code = editor.getSession().getValue();
-					if(code.length > 1) {
+					if (code.length > 1) {
 						let xhr = new XMLHttpRequest();
 						xhr.open('POST', '/api/execute', true);
 						xhr.setRequestHeader('Content-Type', 'text/x-lua');
@@ -227,7 +227,6 @@ local index_page = [[
 ]]
 
 function t.OnLoad()
-	package.loaded.svhttp = nil
 	local server = require('svhttp'):newServer('*', 1337)
 	local exec_env = setmetatable({
 		_SELF = server,

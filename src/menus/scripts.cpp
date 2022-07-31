@@ -18,41 +18,45 @@ public:
 class MenuItemStatus : public MenuItemDefault {
 	std::string GetCaption(void) {
 		LuaScript *scr = ((MenuScript *)GetMenu())->GetScript();
-		return MenuItemDefault::GetCaption() +
-		std::string(scr->IsEnabled() ? "enabled," : "disabled,") +
-		std::string(scr->HasError() ? " with errors" : " no errors");
+		std::string state;
+		if (scr->IsEnabled())
+			state = Lng.Get("core.script.state1");
+		else if (scr->HasError())
+			state = Lng.Get("core.script.state2");
+		else
+			state = Lng.Get("core.script.state3");
+		return Lng.Get("core.script.state", state.c_str());
 	}
 
 public:
-	MenuItemStatus(std::string title)
-		: MenuItemDefault(title) {}
+	MenuItemStatus()
+		: MenuItemDefault("") {}
 };
 
 class MenuItemUsage : public MenuItemDefault {
+	std::string m_usage = Lng.Get("core.script.rvlusage");
+
 	std::string GetCaption(void) {
-		return MenuItemDefault::GetCaption() + m_usage + " KB";
+		return m_usage;
 	}
 
 	void OnSelect(void) {
 		LuaScript *scr = ((MenuScript *)GetMenu())->GetScript();
-		m_usage = std::to_string(scr->GetMemoryUsage());
+		m_usage = Lng.Get("core.script.usage", scr->GetMemoryUsage());
 	}
 
-private:
-	std::string m_usage = "[press to update]";
-
 public:
-	MenuItemUsage(std::string title)
-		: MenuItemDefault(title) {}
+	MenuItemUsage()
+		: MenuItemDefault("") {}
 };
 
 class MenuItemReload : public MenuItemDefault {
 	void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
-		if(script->Load())
-			SetStatusText("Script successfully reloaded");
+		if (script->Load())
+			SetStatusText(Lng.Get("core.script.nfy.relsc"));
 		else
-			SetStatusText("Failed to reload script, see logs");
+			SetStatusText(Lng.Get("core.script.nfy.relfl"));
 	}
 
 public:
@@ -63,15 +67,15 @@ public:
 class MenuItemUnload : public MenuItemDefault {
 	void OnSelect(void) {
 		LuaScript *script = ((MenuScript *)GetMenu())->GetScript();
-		for(std::map<std::string, LuaScript *>::iterator it = Scripts.begin(); it != Scripts.end();) {
-			if(it->second == script) {
+		for (auto it = Scripts.begin(); it != Scripts.end();) {
+			if (it->second == script) {
 				it = Scripts.erase(it);
 			} else {
 				it++;
 			}
 		}
 		delete script;
-		SetStatusText("Script successfully unloaded");
+		SetStatusText(Lng.Get("core.script.nfy.unlsucc"));
 		GetMenu()->GetController()->PopMenu(2);
 	}
 
@@ -97,18 +101,18 @@ class MenuItemScript : public MenuItemDefault {
 		auto controller = GetMenu()->GetController();
 		controller->RegisterMenu(menu);
 
-		menu->AddItem(new MenuItemStatus("Status: "));
-		menu->AddItem(new MenuItemUsage("Usage: "));
+		menu->AddItem(new MenuItemStatus());
+		menu->AddItem(new MenuItemUsage());
 
 		auto scrmenu = script->GetMyMenu();
-		if(scrmenu) {
+		if (scrmenu) {
 			controller->RegisterMenu(scrmenu);
-			menu->AddItem(new MenuItemMenu("Script menu", scrmenu));
+			menu->AddItem(new MenuItemMenu(Lng.Get("core.script.ownmenu"), scrmenu));
 		}
 
-		menu->AddItem(new MenuItemToggle("Toggle"));
-		menu->AddItem(new MenuItemReload("Reload"));
-		menu->AddItem(new MenuItemUnload("Unload"));
+		menu->AddItem(new MenuItemToggle(Lng.Get("core.script.tgl")));
+		menu->AddItem(new MenuItemReload(Lng.Get("core.script.rel")));
+		menu->AddItem(new MenuItemUnload(Lng.Get("core.script.unl")));
 
 		controller->PushMenu(menu);
 	}
@@ -122,14 +126,14 @@ public:
 };
 
 MenuTemporary *CreateScriptsList(MenuController *controller) {
-	auto menu = new MenuTemporary(new MenuItemListTitle("Scripts list"));
+	auto menu = new MenuTemporary(new MenuItemListTitle(Lng.Get("core.main.scripts")));
 	controller->RegisterMenu(menu);
 
-	if(Scripts.size() > 0) {
-		for(auto &x : Scripts)
+	if (Scripts.size() > 0) {
+		for (auto &x : Scripts)
 			menu->AddItem(new MenuItemScript(x.first, x.second));
 	} else
-		menu->AddItem(new MenuItemDefault("No scripts found"));
+		menu->AddItem(new MenuItemDefault(Lng.Get("core.scripts.nf")));
 
 	return menu;
 }
