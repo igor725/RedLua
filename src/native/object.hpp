@@ -99,7 +99,7 @@ static int vector_tostring(lua_State *L, NativeObject *no) {
 static int vector_newindex(lua_State *L, NativeObject *no, char idx) {
 	auto nv = (Vector3 *)NATIVEOBJECT_GETPTR(no);
 
-	switch(idx) {
+	switch (idx) {
 		case 'x':
 		case 'X':
 			nv->x = (float)luaL_checknumber(L, 3);
@@ -123,7 +123,7 @@ static int vector_index(lua_State *L, NativeObject *no, char idx) {
 	if (no->hdr.type != NTYPE_VECTOR3) return 0;
 	auto nv = (Vector3 *)NATIVEOBJECT_GETPTR(no);
 
-	switch(idx) {
+	switch (idx) {
 		case 'x':
 		case 'X':
 			lua_pushnumber(L, nv->x);
@@ -175,7 +175,7 @@ static int native_newindex(lua_State *L) {
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
 	auto ptr = &(((char *)(&no->content))[idx * nti.size]);
 
-	switch(no->hdr.type) {
+	switch (no->hdr.type) {
 		case NTYPE_INT:
 		case NTYPE_HASH:
 		case NTYPE_ANY:
@@ -183,7 +183,7 @@ static int native_newindex(lua_State *L) {
 			break;
 
 		default:
-			switch(lua_type(L, 3)) {
+			switch (lua_type(L, 3)) {
 				case LUA_TUSERDATA:
 					memcpy(ptr, NATIVEOBJECT_GETPTR(native_check(L, 3, no->hdr.type)), nti.size);
 					break;
@@ -210,7 +210,7 @@ static int native_index(lua_State *L) {
 	luaL_argcheck(L, idx < no->hdr.count, 2, "out of bounds");
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
 	auto ptr = (NativeData)&(((char *)(&no->content))[idx * nti.size]);
-	switch(no->hdr.type) {
+	switch (no->hdr.type) {
 		case NTYPE_INT:
 		case NTYPE_HASH:
 		case NTYPE_ANY:
@@ -257,7 +257,7 @@ static inline int vector_mul_num(Vector3 *v, float num) {
 }
 
 static int vector_mul(lua_State *L, NativeObject *no) {
-	switch(lua_type(L, 2)) {
+	switch (lua_type(L, 2)) {
 		case LUA_TUSERDATA:
 			return vector_mul_vector(
 				(Vector3 *)NATIVEOBJECT_GETPTR(push_uncached_fullcopy(
@@ -286,7 +286,7 @@ static int native_arith_error(lua_State *L, NativeType type) {
 
 static int native_mul(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	switch(no->hdr.type) {
+	switch (no->hdr.type) {
 		case NTYPE_VECTOR3:
 			return vector_mul(L, no);
 		default:
@@ -298,7 +298,7 @@ static int native_mul(lua_State *L) {
 
 static int native_unm(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	switch(no->hdr.type) {
+	switch (no->hdr.type) {
 		case NTYPE_VECTOR3:
 			return vector_unm(L, no);
 		default:

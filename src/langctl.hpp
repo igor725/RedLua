@@ -16,7 +16,7 @@ typedef struct {
 
 typedef std::map<std::string, LangMap> LangsMap;
 
-class Lang {
+class LangCtl {
 	LangsMap m_lngMap = {};
 	LangMap *m_currLang = nullptr,
 	*m_defaultLang = nullptr;
@@ -118,4 +118,4 @@ public:
 	}
 };
 
-extern Lang Lng;
+extern LangCtl Lng;

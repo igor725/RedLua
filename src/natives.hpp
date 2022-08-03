@@ -19,6 +19,11 @@ namespace NATIVES {
 	static void DRAW_RECT(float x, float y, float width, float height, int r, int g, int b, int a, BOOL p8, BOOL p9) { (void)p8; (void)p9; invoke<Void>(0x3A618A217E5154F0, x, y, width, height, r, g, b, a); }
 	static int GET_LOCALE(void) { return invoke<int>(0x2BDD44CC428A7EAE); }
 
+	static void SHOW_KEYBOARD(int type, const char *title, const char *def, int maxLen) { invoke<Void>(0x00DC833F2568DBF6, type, title, "", def, "", "", "", maxLen); }
+	static int UPDATE_KEYBOARD() { return invoke<int>(0x0CF2B696BBF945AE); }
+	static void CANCEL_KEYBOARD() { invoke<Void>(0x58A39BE597CE99CD); }
+	static const char *RESULT_KEYBOARD() { return invoke<const char *>(0x8362B09B91893647); }
+
 	static void NOTIFY(int type, int duration, const char *message) {
 		(void)type; (void)duration;
 		invoke<Void>(0x202709F4C58A0424, "STRING");
@@ -39,6 +44,11 @@ namespace NATIVES {
 	static void DRAW_RECT(float x, float y, float width, float height, int r, int g, int b, int a, BOOL p8, BOOL p9) { invoke<Void>(0x405224591DF02025, x, y, width, height, r, g, b, a, p8, p9); }
 	static int GET_LOCALE(void) { return invoke<int>(0xDB917DA5C6835FCC); }
 
+	static void SHOW_KEYBOARD(int type, const char *title, const char *def, int maxLen) { invoke<Void>(0x044131118D8DB3CD, type, title, "", def, "", "", "", maxLen); }
+	static int UPDATE_KEYBOARD() { return invoke<int>(0x37DF360F235A3893); }
+	static void CANCEL_KEYBOARD() { invoke<Void>(0x58A39BE597CE99CD); }
+	static const char *RESULT_KEYBOARD() { return invoke<const char *>(0xAFB4CF58A4A292B1); }
+
 	static void NOTIFY(int type, int duration, const char *message) {
 		struct {
 			int val;
@@ -50,7 +60,7 @@ namespace NATIVES {
 			const char *msg;
 		} dat = {{0}, CREATE_STRING(10, "LITERAL_STRING", message)};
 
-		switch(type) {
+		switch (type) {
 			case 0 /*Tooltip*/:
 				invoke<Void>(0x049D5C615BD38BAD, &dur, &dat, true);
 				break;

@@ -1,5 +1,5 @@
 #include "menus\langlist.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 class MenuItemLang : public MenuItemDefault {
 	std::string m_langCode;

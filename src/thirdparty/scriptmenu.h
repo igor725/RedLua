@@ -287,7 +287,7 @@ public:
 	void PushMenu(MenuBase *menu)	{	if (IsMenuRegistered(menu)) m_menuStack.push_back(menu); }
 	void PopMenu()					{   if (m_menuStack.size()) { m_menuStack.back()->OnPop(); m_menuStack.pop_back(); } }
 	void PopMenu(size_t count)      {   if (count == 0) count = m_menuStack.size(); for (size_t i = 0; i < count; i++) PopMenu(); }
-	void SetStatusText(string text, int ms) { NATIVES::NOTIFY(1, ms, text.c_str()); }
+	void SetStatusText(string text, int ms = 2500) { NATIVES::NOTIFY(1, ms, text.c_str()); }
 	bool IsRebuildRequested()       {   return m_rebuildRequested; }
 	void RequestRebuild()           {   m_rebuildRequested = true; }
 	void RebuildDone()              {   m_rebuildRequested = false; }

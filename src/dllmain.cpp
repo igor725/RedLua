@@ -8,7 +8,7 @@ BOOL registred = FALSE;
 
 BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 #ifndef REDLUA_STANDALONE
-	switch(dwReason) {
+	switch (dwReason) {
 		case DLL_PROCESS_ATTACH:
 			tryagain:
 			if (!EnsureDirectory(REDLUA_ROOT_DIR)
@@ -16,7 +16,7 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 			|| !EnsureDirectory(REDLUA_LANGS_DIR)
 			|| !EnsureDirectory(REDLUA_LIBS_DIR)
 			|| !EnsureDirectory(REDLUA_CLIBS_DIR)) {
-				switch(MessageBox(NULL, "Failed to create RedLua "
+				switch (MessageBox(NULL, "Failed to create RedLua "
 					"directory, please set write permissions "
 					"to the root folder of the game.", REDLUA_FULLNAME,
 					MB_ICONERROR | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
@@ -44,7 +44,7 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 			break;
 	}
 #else
-	switch(dwReason) {
+	switch (dwReason) {
 		case DLL_PROCESS_ATTACH:
 			RedLuaMain();
 			break;

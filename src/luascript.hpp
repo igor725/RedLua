@@ -17,7 +17,7 @@ static int log_print(lua_State *L) {
 	int tempi;
 
 	for (int i = 1; i <= lua_gettop(L); i++) {
-		switch(lua_type(L, i)) {
+		switch (lua_type(L, i)) {
 			case LUA_TNIL:
 				logstr.append("nil");
 				break;

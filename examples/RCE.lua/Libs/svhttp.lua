@@ -1,4 +1,63 @@
-local socket = require('socket.core')
+local ffi = require'ffi'
+local C = ffi.C
+ffi.cdef[[
+	void *malloc(size_t);
+	void *realloc(void *, size_t);
+	void free(void *);
+
+	void Sleep(unsigned long);
+
+	struct WSADATA {
+		short wLoVer, wHiVer;
+		unsigned short iMaxSock;
+		long dont_care[128];
+	};
+
+	int WSAStartup(short, struct WSADATA *);
+	void WSACleanup();
+	unsigned long WSAGetLastError();
+
+	struct sockaddr {
+		unsigned short sa_family;
+		char           sa_data[14];
+	};
+
+	struct in_addr {
+		unsigned long s_addr;
+	};
+
+	struct sockaddr_in {
+		short sin_family;
+		unsigned short sin_port;
+		struct in_addr sin_addr;
+		char sin_zero[8];
+	};
+
+	unsigned short htons(unsigned short);
+	unsigned long htonl(unsigned long);
+	int inet_pton(int, const char *, void *);
+
+	int socket(int, int, int);
+	int bind(int, const struct sockaddr *, int);
+	int listen(int, int);
+	int accept(int);
+	int recv(int, char *, int, int);
+	int send(int, const char *, int, int);
+	int setsockopt(int, int, int, const void *, int);
+	int ioctlsocket(int, long, unsigned long *);
+	void closesocket(int);
+
+	struct sockbuf {
+		unsigned int size, pos;
+		char *ptr;
+	};
+]]
+local lib = ffi.load'ws2_32'
+local wdata = ffi.new('struct WSADATA')
+if lib.WSAStartup(0x0202, wdata) ~= 0 then
+	error('WSAStartup failed')
+end
+
 local httpcodes = require('httpcodes')
 local no_body = {
 	['GET'] = true, ['DELETE'] = true,
@@ -52,21 +111,131 @@ local _M = {
 }
 _M.__index = _M
 
-local function sassert(fd, ret, err)
-	if not ret then
-		fd:close()
+local function ensure(buf, need)
+	if buf.size - buf.pos < need then
+		local newsz = buf.size + need + 256
+		buf.ptr = C.realloc(buf.ptr, newsz)
+		assert(buf.ptr ~= nil, 'realloc() failed')
+		buf.size = newsz
 	end
-	assert(ret, err)
+end
+
+local sock_meta = {
+	init = function(self, fd)
+		self.fd = fd
+		local val = ffi.new('long[1]', 0)
+		if lib.setsockopt(fd, 0xffff, 0x0004, val, 4) ~= 0 then -- REUSEADDR
+			error('setsockopt failed')
+		end
+		val[0] = 1
+		if lib.ioctlsocket(fd, -2147195266, val) ~= 0 then -- FIONBIO
+			print(lib.WSAGetLastError())
+			error('ioctlsocket failed')
+		end
+	end,
+	bind = function(self, addr)
+		if lib.bind(self.fd, ffi.cast('const struct sockaddr *', addr), ffi.sizeof(addr)) ~= 0 then
+			print(lib.WSAGetLastError())
+			error('bind() failed')
+		end
+		if lib.listen(self.fd, 128) ~= 0 then
+			print(lib.WSAGetLastError())
+			error('listen() failed')
+		end
+	end,
+	receive = function(self, t)
+		if self._sockbuf == nil then
+			self._sockbuf = ffi.new('struct sockbuf', {
+				32, 0, C.malloc(32)
+			})
+		end
+
+		if t == '*l' then
+			local len
+			repeat
+				ensure(self._sockbuf, 1)
+				len = lib.recv(self.fd, self._sockbuf.ptr + self._sockbuf.pos, 1, 0)
+				if len > 0 then
+					local ch = self._sockbuf.ptr[self._sockbuf.pos]
+					if ch == 10 then
+						local e = self._sockbuf.pos
+						self._sockbuf.pos = 0
+						return ffi.string(self._sockbuf.ptr, e)
+					elseif ch ~= 13 then
+						self._sockbuf.pos = self._sockbuf.pos + 1
+					end
+				end
+			until len == -1 or len == 0
+
+			return nil, 'timeout'
+		elseif t == '*a' then
+			ensure(self._sockbuf, 128)
+			local ret
+			repeat
+				ret = lib.recv(self.fd, self._sockbuf.ptr + self._sockbuf.pos, 128, 0)
+				if ret > 0 then self._sockbuf.pos = self._sockbuf.pos + ret end
+			until ret == -1 or ret == 0
+
+			return self._sockbuf.pos
+		elseif type(t) == 'number' then
+			ensure(self._sockbuf, t)
+			local len = lib.recv(self.fd, self._sockbuf.ptr, t, 0)
+			return ffi.string(self._sockbuf.ptr, len)
+		end
+
+		return nil, 'fuck'
+	end,
+	send = function(self, data, from)
+		from = from or 0
+		local bs = #data - from
+		local sent = from
+		if bs > 0 then
+			data = ffi.cast('char *', data) + from
+			local ret = lib.send(self.fd, data, bs, 0)
+			if ret < 0 then return 0, 'timeout', from end
+			from = from + ret
+			bs = bs - ret
+		end
+
+		local err
+		if bs ~= 0 then
+			err = 'timeout'
+		else
+			from = nil
+		end
+
+		return sent, err, from
+	end,
+	close = function(self)
+		lib.closesocket(self.fd)
+		if self._sockbuf then
+			C.free(self._sockbuf.ptr)
+			self._sockbuf.ptr = nil
+		end
+	end
+}
+sock_meta.__index = sock_meta
+sock_meta.accept = function(self)
+	local cfd = lib.accept(self.fd)
+	if cfd == -1 then return nil, true end
+	local cl = setmetatable({}, sock_meta)
+	cl:init(cfd)
+	return cl
 end
 
 local function binder(ip, port)
 	if ip == '*' then ip = '0.0.0.0' end
-	local fd = assert(socket.tcp())
-	fd:setoption('reuseaddr', true)
-	sassert(fd, fd:bind(ip, port))
-	sassert(fd, fd:listen())
-	fd:settimeout(0)
-	return fd
+	local addr = ffi.new('struct sockaddr_in', {
+		sin_family = 2, -- AF_INET
+		sin_port = lib.htons(port),
+	})
+	if lib.inet_pton(addr.sin_family, ip, addr.sin_addr) ~= 1 then
+		error('Invalid IP specified')
+	end
+	local sock = setmetatable({}, sock_meta)
+	sock:init(lib.socket(addr.sin_family, 1, 6))
+	sock:bind(addr)
+	return sock
 end
 
 local function waitForLine(cl)
@@ -295,7 +464,6 @@ function _M:doStep()
 
 			break
 		end
-		client:settimeout(0)
 		self.clients[client] = coroutine.create(self.clientHandler)
 	end
 
@@ -322,7 +490,7 @@ end
 
 function _M:startLoop()
 	while self:doStep() do
-		socket.sleep(0.01)
+		C.Sleep(10)
 	end
 end
 

@@ -1,6 +1,6 @@
 # Lua scripting mod for RDR2/GTAV [![Build Status](https://github.com/igor725/RedLua/actions/workflows/release.yml/badge.svg)](https://github.com/igor725/RedLua/actions/workflows/release.yml)
 
-RedLua is a AB ScriptHook library that simplifies the game modding process.
+RedLua is a AB's ScriptHook library that simplifies the game modding process.
 
 ## Installation
 
@@ -165,7 +165,7 @@ misc.iskeyjustup(VK_*, exclusive = false)
 misc.resetkey(VK_*)
 
 -- Get game version
-misc.gamever() -- Returns: number (e.g. 1436.31) and string ("rdr3" or "gta5")
+misc.gamever() -- Returns: number (getGameVersion() result) and string ("rdr3" or "gta5")
 
 -- Get RedLua version
 misc.libver() -- Returns: integer, e.g. 010, 020, etc.
@@ -181,6 +181,18 @@ menu.set {...} -- Returns: nothing. Note that this function is NOT safe, it may 
 -- Remove menu section for the script
 -- Note that the menu will only be removed after 1 or more (depends on the number of submenus) full garbage collection steps!
 menu.remove() -- Returns: nothing
+
+--[[
+	Library: lang
+]]
+
+-- Add locale strings
+-- Example script: examples/ScriptMenu.lua
+lang.install {...} -- Returns: nothing
+
+-- Get localized string for the current language
+lang.get(code) -- Returns: string
+
 ```
 
 ## Contribution

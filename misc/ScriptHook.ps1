@@ -35,7 +35,7 @@ if (Test-Path -PathType Container $SHOOK_DIR) {
 	$choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
 	$choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList "&Yes", "ScriptHook$($VARIANT) will be redownloaded"))
 	$choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList "&No", "This script will close"))
-	switch($Host.UI.PromptForChoice($title, $text, $choices, 1)) {
+	switch ($Host.UI.PromptForChoice($title, $text, $choices, 1)) {
 		0 {
 			Remove-Item -Recurse -Force $SHOOK_DIR
 		}

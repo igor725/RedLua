@@ -1,6 +1,6 @@
 #include "position.hpp"
 #include "settingsctl.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 class MenuItemPosition : public MenuItemDefault {
 	void OnSelect() {

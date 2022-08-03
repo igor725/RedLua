@@ -8,6 +8,7 @@ core.main.setts=Настройки
 core.main.about=О RedLua
 
 # Настройки
+core.setts.hotkey=Изменить бинд меню
 core.setts.autorun=Автозагрузка скриптов
 core.setts.updater=Автообновление библиотеки
 core.setts.chkupd=Проверить обновления
@@ -18,12 +19,16 @@ core.setts.toggall=Вкл/выкл все скрипты
 core.setts.relall=Перезагрузить все скрипты
 core.setts.unlall=Выгрузить все скрипты
 
+core.setts.nfy.hksc=Бинд меню изменён на %s
+core.setts.nfy.hkfl=Неизвестная кнопка %s
+core.setts.nfy.hkin=Введён недопустимый код кнопки %d
 core.setts.nfy.srlsc=Список скриптов успешно обновлён
 core.setts.nfy.srlfl=Не удалось обновить список скриптов
 core.setts.nfy.nrlsc=NativeDB успешно перезагружена
 core.setts.nfy.nrlfl=Не удалось перезагрузить NativeDB: %d
 core.setts.nfy.runall=Выполнение всех скриптов возобновлено
 core.setts.nfy.stpall=Выполнение всех скриптов приостановлено
+core.setts.nfy.relall=Все скрпиты перезагружены
 core.setts.nfy.unlall=Все скрпиты выгружены
 
 # Список скриптов
@@ -48,6 +53,7 @@ core.script.nfy.unlsc=Скрипт выгружен успешно
 # Проверка обновлений
 core.chkupd.rl=Обновить RedLua
 core.chkupd.ndb=Обновить NativeDB
+core.chkupd.nfy.noup=Обновления не найдены
 core.chkupd.nfy.upfl=Поризошла ошибка при обновлении: %d
 core.updalert.nfn=Новая версия %s
 core.updalert.btn=Открыть страницу загрузки

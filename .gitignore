@@ -1,5 +1,4 @@
 .vscode/settings.json
-src/thirdparty/ScriptHookRDR2/
-src/thirdparty/ScriptHookV/
+src/thirdparty/ScriptHook*/
 src/thirdparty/LuaJIT/
 objs/

@@ -276,4 +276,13 @@ end
 
 t.OnReload = t.OnStop
 
-return t
+if ... then
+	return t
+else
+	package.path = '.\\Libs\\?.lua'
+	package.cpath = '.\\Libs\\C\\?.dll'
+	t.OnLoad()
+	while not _STOP do
+		t.OnTick()
+	end
+end

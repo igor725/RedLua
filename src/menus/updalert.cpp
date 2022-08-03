@@ -2,7 +2,7 @@
 #include "menus\updalert.hpp"
 #include "thirdparty\scriptmenu.h"
 #include "constants.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 void CreateUpdateAlert(MenuController *controller, std::string &version) {
 	auto menu = new MenuTemporary(new MenuItemTitle(Lng.Get("core.updalert.nfn", version.c_str())));

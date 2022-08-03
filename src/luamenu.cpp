@@ -149,7 +149,7 @@ MenuLua *gen_menu(lua_State *L, int depth) {
 		lua_getfield(L, -2, "type");
 		int itype = lua_tointeger(L, -1);
 		bool initial; // Для свитча
-		switch(itype) {
+		switch (itype) {
 			case 0: // Menu
 				lua_getfield(L, -3, "menu");
 				if (!lua_istable(L, -1)) goto error;

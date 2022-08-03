@@ -100,7 +100,7 @@ static int native_globalptr(lua_State *L) {
 
 static int native_scrbase(lua_State *L) {
 	int handle = 0;
-	switch(lua_type(L, 1)) {
+	switch (lua_type(L, 1)) {
 		case LUA_TNUMBER:
 			handle = (int)luaL_checkinteger(L, 1);
 			break;

@@ -10,4 +10,4 @@ As soon as RCE loads, it starts the web server on [0.0.0.0:1337](https://127.0.0
 
 ## Credits
 
-This mod uses thirdparty libraries such as [luasocket](https://luarocks.org/modules/lunarmodules/luasocket), [mimetypes](https://luarocks.org/modules/luarocks/mimetypes), [Ace Editor](https://ace.c9.io/) and [Toastify](https://github.com/apvarun/toastify-js)
+This mod uses some thirdparty libraries such as [mimetypes](https://luarocks.org/modules/luarocks/mimetypes), [Ace Editor](https://ace.c9.io/) and [Toastify](https://github.com/apvarun/toastify-js)

@@ -1,7 +1,7 @@
 #include "menus\helpers.hpp"
 #include "menus\about.hpp"
 #include "constants.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 MenuBase *CreateAbout(MenuController *controller) {
 	auto menu = new MenuBase(new MenuItemTitle(Lng.Get("core.main.about")));

@@ -52,7 +52,7 @@ typedef struct _NativeMeth {
 	UINT64 hash;
 	NativeType returns;
 	NativeParams params;
-	long firstSeen;
+	unsigned long firstSeen;
 	bool isVararg;
 	bool isRetPtr;
 	bool isRetConst;

@@ -1,7 +1,7 @@
 #include "updatesctl.hpp"
 #include "constants.hpp"
 #include "settingsctl.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 #include "thirdparty\json.hpp"
 #include <Windows.h>

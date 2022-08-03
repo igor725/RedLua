@@ -6,7 +6,7 @@
 #include "menus\main.hpp"
 #include "menus\updalert.hpp"
 #include "constants.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 #include "thirdparty\easyloggingpp.h"
 #include <windows.h>
@@ -85,13 +85,13 @@ void RedLuaMain(void) {
 		LOG(DEBUG) << "Starting updates checker...";
 		std::string nevwer;
 		if (auto code = UpdatesCtl.CheckRedLua(nevwer)) {
-			if (code != UpdatesController::Returns::ERR_NO_UPDATES)
+			if (code != UpdatesController::ERR_NO_UPDATES)
 				LOG(ERROR) << "RedLua updater failed: " << code;
 		} else
 			CreateUpdateAlert(menuController, nevwer);
 
 		if (auto code = UpdatesCtl.CheckNativeDB()) {
-			if (code != UpdatesController::Returns::ERR_NO_UPDATES)
+			if (code != UpdatesController::ERR_NO_UPDATES)
 				LOG(ERROR) << "NativeDB updater failed: " << code;
 		} else
 			LOG(INFO) << "NativeDB updated successfully";

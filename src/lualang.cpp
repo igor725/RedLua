@@ -1,5 +1,5 @@
 #include "lualang.hpp"
-#include "lang.hpp"
+#include "langctl.hpp"
 
 static int lang_install(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);

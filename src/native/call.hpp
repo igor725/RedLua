@@ -41,7 +41,7 @@ static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_all
 static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
 	float temp;
 
-	switch(lua_type(L, idx)) {
+	switch (lua_type(L, idx)) {
 		case LUA_TNIL:
 			if (!param || param->isPointer)
 				return (nativePush(nullptr), 1);
@@ -93,7 +93,7 @@ static int native_perform(lua_State *L, NativeMeth *meth) {
 		return 0;
 
 	if (!meth->isRetPtr) {
-		switch(meth->returns) {
+		switch (meth->returns) {
 			case NTYPE_INT:
 			case NTYPE_ANY:
 			case NTYPE_HASH:

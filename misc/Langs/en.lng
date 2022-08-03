@@ -8,6 +8,7 @@ core.main.setts=Settings
 core.main.about=About RedLua
 
 # Settings
+core.setts.hotkey=Change menu hotkey
 core.setts.autorun=Autorun feature enabled
 core.setts.updater=Check for updates at startup
 core.setts.chkupd=Check for updates
@@ -18,12 +19,16 @@ core.setts.toggall=Toggle all scripts
 core.setts.relall=Reload all scripts
 core.setts.unlall=Unload all scripts
 
+core.setts.nfy.hksc=Menu hotkey changed to %s
+core.setts.nfy.hkfl=Unknown keyname specified %s
+core.setts.nfy.hkin=Unknown keycode specified %d
 core.setts.nfy.srlsc=Script list has been successfully updated
 core.setts.nfy.srlfl=Failed to update script list
 core.setts.nfy.nrlsc=NativeDB reloaded successfully!
 core.setts.nfy.nrlfl=Failed to reload NativeDB, error code: %d
 core.setts.nfy.runall=All scripts have been resumed
 core.setts.nfy.stpall=All scripts have been suspended
+core.setts.nfy.relall=All scripts have been reloaded
 core.setts.nfy.unlall=All scripts have been unloaded
 
 # Scripts list

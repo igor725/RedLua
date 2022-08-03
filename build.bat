@@ -13,6 +13,7 @@ IF "%1"=="standalone" SET RL_STANDALONE=1
 IF "%1"=="" GOTO argdone
 SHIFT
 GOTO argparse
+
 :argdone
 SET RL_LUAJIT_SOURCE_DIR=.\src\thirdparty\LuaJIT\src
 IF NOT EXIST "%RL_LUAJIT_SOURCE_DIR%\lua51.lib" (
