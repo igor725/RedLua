@@ -1,7 +1,6 @@
 #pragma once
 
 #include "thirdparty\LuaJIT\src\lua.hpp"
-#include "thirdparty\easyloggingpp.h"
 #include "native\types.hpp"
 #include <map>
 

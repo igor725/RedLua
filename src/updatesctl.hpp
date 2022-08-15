@@ -18,8 +18,8 @@ public:
 		ERR_NO_UPDATES
 	};
 
-	UpdatesController::Returns CheckRedLua(std::string &vername);
-	UpdatesController::Returns CheckNativeDB(bool force_update = false);
+	Returns CheckRedLua(std::string &vername);
+	Returns CheckNativeDB(bool force_update = false);
 	void Stop(void);
 };
 

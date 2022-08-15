@@ -1,4 +1,3 @@
-#include "thirdparty\easyloggingpp.h"
 #include "thirdparty\scriptmenu.h"
 #include "thirdparty\keyboard.h"
 #include "menus\settings.hpp"

@@ -33,8 +33,7 @@ public:
 
 class MenuTemporary : public MenuBase
 {
-	void OnPop(void)
-	{
+	void OnPop(void) {
 		delete this;
 	}
 

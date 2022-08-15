@@ -1,7 +1,6 @@
 #include "luamenu.hpp"
 #include "natives.hpp"
 #include "thirdparty\scriptmenu.h"
-#include "thirdparty\easyloggingpp.h"
 
 class MenuLua : public MenuBase {
 	MenuLua **m_self; lua_State *m_L;

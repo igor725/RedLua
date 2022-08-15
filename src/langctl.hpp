@@ -17,11 +17,13 @@ typedef struct {
 typedef std::map<std::string, LangMap> LangsMap;
 
 class LangCtl {
-	LangsMap m_lngMap = {};
-	LangMap *m_currLang = nullptr,
-	*m_defaultLang = nullptr;
+	LangsMap m_lngMap;
+	LangMap *m_currLang,
+	*m_defaultLang;
 
 public:
+	LangCtl() : m_lngMap({}), m_currLang(nullptr), m_defaultLang(nullptr) {};
+
 	template<typename ...Args>
 	std::string Get(std::string code, Args... ar) {
 		if (auto localLang = m_currLang) {

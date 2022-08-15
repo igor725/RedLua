@@ -18,7 +18,7 @@ static std::vector<struct KeyEvent> VirtualPress {};
 void emu_scriptWait(DWORD ms) {
 	Sleep(100);
 	if (VirtualPress.size() > 0) {
-		struct KeyEvent &ke = VirtualPress.back();
+		auto &ke = VirtualPress.back();
 		OnKeyboardMessage(ke.key, ke.repeats, ke.scanCode,
 			ke.isExtended, ke.isWithAlt, ke.wasDownBefore, ke.isUpNow);
 		VirtualPress.pop_back();

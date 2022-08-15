@@ -12,7 +12,10 @@ MenuBase *CreateMainMenu(MenuController *controller) {
 	controller->RegisterMenu(menu);
 
 	menu->AddItem(new MenuItemButton(Lng.Get("core.main.scripts"), [](auto ctl) {
-		ctl->PushMenu(CreateScriptsList(ctl));
+		if(Scripts.size() > 0)
+			ctl->PushMenu(CreateScriptsList(ctl));
+		else
+			ctl->SetStatusText(Lng.Get("core.scripts.nf"));
 	}));
 	menu->AddItem(new MenuItemButton(Lng.Get("core.main.refr"), [](auto ctl) {
 		if (RedLuaScanScripts())
