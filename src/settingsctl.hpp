@@ -1,14 +1,14 @@
 #pragma once
 
 #include "constants.hpp"
-#include "thirdparty\json.hpp"
+#include "json.hpp"
 
 #include <fstream>
 #include <string>
 
 class SettingsController {
 	std::string m_file;
-	nlohmann::json m_data;
+	json m_data;
 	bool m_modified = true;
 
 public:
@@ -18,7 +18,7 @@ public:
 	bool Load(void) {
 		std::ifstream jfile(m_file);
 		if (jfile.is_open()) {
-			if (!(m_data = nlohmann::json::parse(jfile, nullptr, false)).is_discarded())
+			if (!(m_data = json::parse(jfile, nullptr, false)).is_discarded())
 				if (m_modified = !m_data.is_object()) m_data = {
 					{"menu_hotkey", REDLUA_HOTKEY_DEFAULT},
 					{"menu_language", "ingame"},

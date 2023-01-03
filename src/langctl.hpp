@@ -54,7 +54,7 @@ public:
 			lngr_tryagain:
 			for (auto &it : localLang->f_map)
 				if (it.first == code) return it.second;
-			
+
 			if (localLang != m_defaultLang) {
 				localLang = m_defaultLang;
 				goto lngr_tryagain;

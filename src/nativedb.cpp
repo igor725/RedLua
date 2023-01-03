@@ -1,9 +1,8 @@
 #include "nativedb.hpp"
 #include "constants.hpp"
+#include "json.hpp"
 
 #include <fstream>
-#include "thirdparty\json.hpp"
-using json = nlohmann::json;
 
 NativeDB Natives (REDLUA_NATIVES_FILE);
 

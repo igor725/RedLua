@@ -2,14 +2,13 @@
 #include "constants.hpp"
 #include "settingsctl.hpp"
 #include "langctl.hpp"
+#include "json.hpp"
 
-#include "thirdparty\json.hpp"
 #include <Windows.h>
 #include <WinInet.h>
 #include <string>
 
 UpdatesController UpdatesCtl;
-using json = nlohmann::json;
 
 static HINTERNET hInternet = NULL;
 
@@ -51,7 +50,7 @@ UpdatesController::Returns UpdatesController::CheckRedLua(std::string &vername) 
 				code = ERR_READ_RESPONSE;
 				break;
 			}
-			
+
 			temp.append((const char *)buf, read);
 		} while (read > 0);
 		if (code != ERR_NO_UPDATES) break;
@@ -119,7 +118,7 @@ UpdatesController::Returns UpdatesController::CheckNativeDB(bool force_update) {
 
 		if (status == 304)
 			break;
-		
+
 		if (status != 200) {
 			code = ERR_UNKNOWN_RESPONSE;
 			break;

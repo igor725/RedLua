@@ -247,7 +247,7 @@ class MenuController
 
 	DWORD	m_inputTurnOnTime;
 	DWORD   m_currentMenuPosition;
-	
+
 	bool    m_rebuildRequested;
 
 	void InputWait(int ms)		{	m_inputTurnOnTime = GetTickCount() + ms; }
