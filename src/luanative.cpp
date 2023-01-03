@@ -64,10 +64,11 @@ static int native_new(lua_State *L) {
 }
 
 #ifdef REDLUA_GTAV
-#define VTN(idx) (float)lua_tonumber(L, idx), 0
+#	define VTN(idx) (float)lua_tonumber(L, idx), 0
 #else
-#define VTN(idx) (float)lua_tonumber(L, idx)
+#	define VTN(idx) (float)lua_tonumber(L, idx)
 #endif
+
 static int native_vector(lua_State *L) {
 	Vector3 pos = {VTN(1), VTN(2), VTN(3)};
 	push_uncached_fullcopy(L, NTYPE_VECTOR3, (NativeData *)&pos);
@@ -75,17 +76,17 @@ static int native_vector(lua_State *L) {
 }
 
 #ifndef REDLUA_STANDALONE
-#define WORLDGETALL(T, TN) { \
-	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT); \
-	luaL_argcheck(L, no->hdr.type != T, 1, "not a" #TN " pool"); \
-	lua_pushinteger(L, worldGetAll##TN((int *)NATIVEOBJECT_GETPTR(no), no->hdr.count)); \
-	return 1; \
-}
+#	define WORLDGETALL(T, TN) { \
+		auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT); \
+		luaL_argcheck(L, no->hdr.type != T, 1, "not a" #TN " pool"); \
+		lua_pushinteger(L, worldGetAll##TN((int *)NATIVEOBJECT_GETPTR(no), no->hdr.count)); \
+		return 1; \
+	}
 #else
-#define WORLDGETALL(T, TN) {lua_pushinteger(L, 0); return 1;}
-#define getGlobalPtr rl_ptrnullsub
-#define getScriptHandleBaseAddress rl_ptrnullsub
-static PUINT64 rl_ptrnullsub(int) {return NULL;}
+#	define WORLDGETALL(T, TN) {lua_pushinteger(L, 0); return 1;}
+#	define getGlobalPtr rl_ptrnullsub
+#	define getScriptHandleBaseAddress rl_ptrnullsub
+	static PUINT64 rl_ptrnullsub(int) {return NULL;}
 #endif
 
 static int native_allobjs(lua_State *L) WORLDGETALL(NTYPE_OBJECT, Objects)

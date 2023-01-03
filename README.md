@@ -1,4 +1,16 @@
-# Lua scripting mod for RDR2/GTAV [![Build Status](https://github.com/igor725/RedLua/actions/workflows/release.yml/badge.svg)](https://github.com/igor725/RedLua/actions/workflows/release.yml)
+<p align='center'>
+    <a href='https://github.com/igor725/RedLua/actions/workflows/release.yml'>
+        <img src='https://github.com/igor725/RedLua/actions/workflows/release.yml/badge.svg' />
+    </a>
+	<a href='https://github.com/igor725/RedLua/releases'>
+		<img src='https://img.shields.io/github/downloads/igor725/RedLua/total.svg' />
+	</a>
+    <a href='https://github.com/igor725/RedLua/pulse'>
+        <img src='https://img.shields.io/github/commit-activity/m/igor725/RedLua' />
+    </a>
+</p>
+
+# Lua scripting mod for RDR2/GTAV
 
 RedLua is a AB's ScriptHook library that simplifies the game modding process.
 
@@ -7,7 +19,7 @@ RedLua is a AB's ScriptHook library that simplifies the game modding process.
 Download the latest [release](https://github.com/igor725/RedLua/releases) and extract the archive contents into your game folder (must be writeable). **Note that the RedLua won't work without the ScriptHook[RDR2](https://www.dev-c.com/rdr2/scripthookrdr2/)/[V](http://www.dev-c.com/gtav/scripthookv/) library!**
 
 ## Usage
-In **RDR2** press **F7**, in **GTAV** default bind is **F4** (you can change the default hotkey in `<Your game directory>\RedLua\Settings.json` file, keycodes available [here](https://cherrytree.at/misc/vk.htm)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
+In **RDR2** press **F7**, in **GTAV** default bind is **F4** (you can change the default hotkey in `<Your game directory>\RedLua\Settings.json` file, keycodes available [here](https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes)) to open the RedLua menu. Here you can load/reload/stop/unload scripts, reload the NativeDB and change library settings.
 
 RedLua uses the [**Easylogging++**](https://github.com/amrayn/easyloggingpp#configuration) library, so if you want to configure the logger, just navigate to `<Your game directory>\RedLua\` and create a file called `Log.conf` with following contents:
 ```conf
@@ -35,7 +47,7 @@ RedLua uses the [**Easylogging++**](https://github.com/amrayn/easyloggingpp#conf
 
 ## Scripting
 
-RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`, `OnReload`. Almost every function of the RDR2's RAGE is described [here](https://alloc8or.re/rdr3/nativedb/) and [here](https://www.rdr2mods.com/nativedb/index/builtin/).
+RedLua searches for scripts in the `<Your game directory>\RedLua\Scripts\`. Each script located in this folder will be loaded automatically (If the `Autorun feature` is enabled). Every script should return a `table` (can be empty) with functions `OnLoad`, `OnTick`, `OnStop`, `OnReload`. Almost every function of the RDR2's RAGE is described [here](https://alloc8or.re/rdr3/nativedb/).
 
 Example:
 ```lua
