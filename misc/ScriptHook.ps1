@@ -46,13 +46,24 @@ if (Test-Path -PathType Container $SHOOK_DIR) {
 	}
 }
 
+try {
+	$HEADERS = @{
+		"Referer" = ($DOMAIN + $LINK);
+		"User-Agent" = "RL/1.0"
+	}
 
-$HEADERS = @{
-	"Referer" = ($DOMAIN + $LINK);
-	"User-Agent" = "RL/1.0"
+	$RESP = Invoke-WebRequest -URI ($DOMAIN + $LINK)
+} catch {
+	Write-Warning "Failed to download SDK from the AB's site, falling back to own server..."
+	$HEADERS = @{
+		"User-Agent" = "RL/1.0"
+	}
+
+	$DOMAIN = "https://igvx.ru"
+	$RESP = Invoke-WebRequest -URI ($DOMAIN + "/shsdk/")
 }
 
-Foreach($elem in (Invoke-WebRequest -URI ($DOMAIN + $LINK)).Links.Href) {
+Foreach($elem in ($RESP).Links.Href) {
 	if ($elem.IndexOf("ScriptHook$($VARIANT)_SDK") -ige 0) {
 		$outFile = "$SCR_DIR/temp.zip";
 		Invoke-WebRequest -Uri ($DOMAIN + $elem) -OutFile $outFile -Headers $HEADERS
