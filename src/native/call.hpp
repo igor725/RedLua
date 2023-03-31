@@ -119,6 +119,10 @@ static int native_perform(lua_State *L, NativeMeth *meth) {
 				lua_pushlstring(L, (char *)ret, 1);
 				break;
 
+			case NTYPE_VECTOR3:
+				push_uncached_fullcopy(L, NTYPE_VECTOR3, ret, 1);
+				break;
+
 			default:
 				push_cached_fullobject(L, meth->returns, (NativeData)*ret);
 				break;
