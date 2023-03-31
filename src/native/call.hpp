@@ -6,11 +6,18 @@
 #include "native\cache.hpp"
 #include "native\object.hpp"
 
+static int RedLua_NameSpace = -1;
+
 static int native_prepare_arg_error(lua_State *L, NativeParam *param, int idx) {
 	static std::string ptr[] = {"", "*"};
-	return luaL_typerror(L, idx, (get_type_info(
-		param ? param->type : NTYPE_UNKNOWN).name + ptr[param->isPointer]
-	).c_str());
+	auto tname = get_type_info(param ? param->type : NTYPE_UNKNOWN).name;
+	auto msg = lua_pushfstring(L,
+		"%s expected, got %s",
+		(tname + ptr[param->isPointer]).c_str(),
+		luaL_typename(L, idx)
+	);
+
+	return luaL_argerror(L, idx - 1, msg);
 }
 
 static int native_prepare_nobj(lua_State *L, NativeParam *param, bool vector_allowed, int idx) {
@@ -123,12 +130,13 @@ static int native_perform(lua_State *L, NativeMeth *meth) {
 }
 
 static int generic_newindex(lua_State *L) {
-	luaL_error(L, "Attempt to modify readonly object");
+	luaL_error(L, "attempt to modify readonly object");
 	return 0;
 }
 
 static int meth_call(lua_State *L) {
 	int nargs = lua_gettop(L);
+	lua_rawgeti(L, LUA_REGISTRYINDEX, RedLua_NameSpace);
 	int mt_top = (int)lua_objlen(L, 1);
 	lua_rawgeti(L, 1, mt_top);
 	lua_pushnil(L);
@@ -146,19 +154,18 @@ static const luaL_Reg methmeta[] = {
 };
 
 static int nspace_index(lua_State *L) {
-	luaL_checktype(L, 2, LUA_TSTRING);
-	lua_rawgeti(L, 1, 1);
+	if (lua_type(L, 2) != LUA_TSTRING)
+		luaL_error(L, "index must be a string");
+	lua_rawgeti(L, 1, 1); // Снова вытаскиваем таблицу методов
 	int mt_top = (int)lua_objlen(L, -1) + 1;
-	lua_rawgeti(L, 1, 2);
-	lua_rawgeti(L, -1, mt_top);
+	lua_rawgeti(L, 1, 2); // А теперь и стек
+	lua_rawgeti(L, -1, mt_top); // Получаем из стека неймспейсов тот, что нужен для текущего метода
 	auto meth = Natives.GetMethod(
 		(NativeNamespace *)lua_touserdata(L, -1),
 		lua_tostring(L, 2)
 	);
-	if (meth == nullptr) {
-		lua_pushnil(L);
-		return 1;
-	}
+	if (meth == nullptr)
+		luaL_error(L, "unknown method");
 	lua_pushlightuserdata(L, meth);
 	lua_rawseti(L, -4, mt_top);
 	lua_pop(L, 2);
@@ -173,43 +180,50 @@ static const luaL_Reg nspacemeta[] = {
 };
 
 static int global_index(lua_State *L) {
-	lua_pushvalue(L, 2);
-	lua_rawget(L, LUA_GLOBALSINDEX);
-	if (lua_isnil(L, -1) && lua_type(L, 2) == LUA_TSTRING) {
-		auto nspace = Natives.GetNamespace(lua_tostring(L, 2));
-		if (nspace == nullptr) return 1; // Возвращаем тот nil, что нам дал rawget выше
+	if (lua_type(L, 2) != LUA_TSTRING)
+		return 0;
 
-		lua_pop(L, 1);
-		lua_getfield(L, LUA_REGISTRYINDEX, "REDLUA_NAMESPACE");
-		lua_rawgeti(L, -1, 1);
-		int mt_top = (int)lua_objlen(L, -1) + 1;
-		lua_rawgeti(L, -2, 2);
-		lua_pushlightuserdata(L, nspace);
-		lua_rawseti(L, -2, mt_top);
-		lua_pop(L, 2);
+	auto nspace = Natives.GetNamespace(lua_tostring(L, 2));
+	if (nspace == nullptr) {
+		lua_pushnil(L);
+		return 1;
 	}
 
+	lua_rawgeti(L, LUA_REGISTRYINDEX, RedLua_NameSpace);
+	lua_rawgeti(L, -1, 1); // Вытаскиваем из таблицы неймспейса таблицу метода
+	int mt_top = (int)lua_objlen(L, -1) + 1; // Свободная ячейка стека неймспейсов
+	lua_rawgeti(L, -2, 2); // Получаем стек неймспейсов
+	lua_pushlightuserdata(L, nspace);
+	lua_rawseti(L, -2, mt_top); // Сохраняем указатель на неймспейс в свободную ячейку стека
+	lua_pop(L, 2);
 	return 1;
 }
 
 static void call_init(lua_State *L) {
-	lua_createtable(L, 1, 0);
-	lua_createtable(L, 0, 0);
-	lua_rawseti(L, -2, 2);
-	lua_createtable(L, 0, 0);
-	lua_createtable(L, 0, 3);
+	lua_createtable(L, 1, 0); // Создаём таблицу для неймспейса
+	lua_createtable(L, 0, 0); // Создаём стек неймспейсов
+	lua_rawseti(L, -2, 2); // Сохраняем стек неймспейса в таблицу под индексом 2
+	lua_createtable(L, 0, 0); // Создаём таблицу для нативного метода
+	lua_createtable(L, 0, 3); // Создаём метатаблицу для нативного метода
 	lua_pushstring(L, "method");
 	lua_setfield(L, -2, "__metatable");
 	luaL_setfuncs(L, methmeta, 0);
-	lua_setmetatable(L, -2);
-	lua_rawseti(L, -2, 1);
-	lua_createtable(L, 0, 3);
+	lua_setmetatable(L, -2); // Присваиваем метатаблицу таблице нативного метода
+	lua_rawseti(L, -2, 1); // Сохраняем таблицу нативного метода в таблицу неймспейса под индексом 1
+	lua_createtable(L, 0, 3); // Создаём метатаблицу для неймспейса
 	lua_pushstring(L, "namespace");
 	lua_setfield(L, -2, "__metatable");
 	luaL_setfuncs(L, nspacemeta, 0);
-	lua_setmetatable(L, -2);
-	lua_setfield(L, LUA_REGISTRYINDEX, "REDLUA_NAMESPACE");
+	lua_setmetatable(L, -2); // Присваиваем метатаблицу таблице для нейспейса
+	RedLua_NameSpace = luaL_ref(L, LUA_REGISTRYINDEX);
 
+	/*
+		Дальше идёт весёлый хак, который к
+		глобальной таблице цепляет метатаблицу.
+		Эта штука нужна для красивых обращений к
+		нативным функциям через псевдоглобальные
+		переменные.
+	*/
 	lua_createtable(L, 0, 1);
 	lua_pushcfunction(L, global_index);
 	lua_setfield(L, -2, "__index");

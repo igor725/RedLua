@@ -167,11 +167,13 @@ static int native_tostring(lua_State *L) {
 
 static int native_newindex(lua_State *L) {
 	auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT);
-	luaL_argcheck(L, !no->hdr.isReadOnly, 1, "readonly object");
+	if (no->hdr.isReadOnly)
+		luaL_error(L, "attempt to modify readonly object");
 	if (lua_type(L, 2) == LUA_TSTRING && no->hdr.type == NTYPE_VECTOR3)
 		return vector_newindex(L, no, *lua_tostring(L, 2));
 	uint idx = (uint)luaL_checkinteger(L, 2);
-	luaL_argcheck(L, idx < no->hdr.count, 2, "out of bounds");
+	if (idx >= no->hdr.count)
+		luaL_error(L, "array index out of bounds");
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
 	auto ptr = &(((char *)(&no->content))[idx * nti.size]);
 
@@ -191,7 +193,11 @@ static int native_newindex(lua_State *L) {
 					memcpy(ptr, lua_topointer(L, 3), nti.size);
 					break;
 				default:
-					luaL_typerror(L, 3, (nti.name + "/cdata").c_str());
+					luaL_error(L,
+						"invalid object passed (%s expected, got %s)",
+						(nti.name + "or cdata").c_str(),
+						luaL_typename(L, 3)
+					);
 					break;
 			}
 			break;
@@ -207,7 +213,8 @@ static int native_index(lua_State *L) {
 		return vector_index(L, no, *str) || luaL_getmetafield(L, 1, lua_tostring(L, 2));
 	}
 	uint idx = (uint)luaL_checkinteger(L, 2);
-	luaL_argcheck(L, idx < no->hdr.count, 2, "out of bounds");
+	if (idx >= no->hdr.count)
+		luaL_error(L, "array index out of bounds");
 	NativeTypeInfo &nti = get_type_info(no->hdr.type);
 	auto ptr = (NativeData)&(((char *)(&no->content))[idx * nti.size]);
 	switch (no->hdr.type) {

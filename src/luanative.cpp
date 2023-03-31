@@ -9,9 +9,9 @@
 
 static int native_call(lua_State *L) {
 	auto nspace = Natives.GetNamespace(luaL_checkstring(L, 1));
-	luaL_argcheck(L, nspace != nullptr, 1, "Unknown namespace");
+	luaL_argcheck(L, nspace != nullptr, 1, "unknown namespace");
 	auto meth = Natives.GetMethod(nspace, luaL_checkstring(L, 2));
-	luaL_argcheck(L, meth != nullptr, 2, "Unknown method");
+	luaL_argcheck(L, meth != nullptr, 2, "unknown method");
 
 	native_prepare(L, meth, lua_gettop(L) - 2);
 	return native_perform(L, meth);
