@@ -17,8 +17,9 @@ jobs:
 
       - name: Get previous tag
         id: prevtag
+        shell: bash
         run: |
-          echo "tag=$(GIT.EXE describe --abbrev=0 --tags ${{ github.ref_name }}`^)" >> $GITHUB_OUTPUT
+          echo "tag=$(GIT.EXE describe --abbrev=0 --tags ${{ github.ref_name }}^)" >> $GITHUB_OUTPUT
 
       - name: Checkout LuaJIT
         uses: actions/checkout@v3
@@ -45,37 +46,15 @@ jobs:
 
       - name: Build release archive
         shell: pwsh
-        run: .\misc\Pack.ps1
+        run: .\misc\Pack.ps1 ${{ github.ref_name }}
 
       - name: Create release
-        id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Pre-release ${{ github.ref_name }}
-          body: |
-            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prevtag.outputs.tag }}...${{ github.ref_name }}
-          draft: false
           prerelease: true
+          name: Pre-release ${{ github.ref_name }}
+          body: "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prevtag.outputs.tag }}...${{ github.ref_name }}"
+          files: |
+            ./objs/RedLuaRDR2-${{ github.ref_name }}.zip
+            ./objs/RedLuaV-${{ github.ref_name }}.zip
 
-      - name: Upload assets (RDR2)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: .\objs\outRDR2.zip
-          asset_name: RedLua-${{ github.ref_name }}.zip
-          asset_content_type: application/zip
-
-      - name: Upload assets (GTAV)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: .\objs\outV.zip
-          asset_name: RedLuaV-${{ github.ref_name }}.zip
-          asset_content_type: application/zip

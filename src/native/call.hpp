@@ -11,12 +11,11 @@ static int RedLua_NameSpace = -1;
 static int native_prepare_arg_error(lua_State *L, NativeParam *param, int idx) {
 	static std::string ptr[] = {"", "*"};
 	auto tname = get_type_info(param ? param->type : NTYPE_UNKNOWN).name;
-	auto msg = lua_pushfstring(L,
-		"%s expected, got %s",
-		(tname + ptr[param->isPointer]).c_str(),
-		luaL_typename(L, idx)
-	);
+	auto gty = luaL_typename(L, idx);
+	if (auto gno = (NativeObject*)luaL_testudata(L, idx, LUANATIVE_OBJECT))
+		gty = get_type_info(gno->hdr.type).name.c_str();
 
+	auto msg = lua_pushfstring(L, "%s expected, got %s", (tname + ptr[param->isPointer]).c_str(), gty);
 	return luaL_argerror(L, idx - 1, msg);
 }
 
