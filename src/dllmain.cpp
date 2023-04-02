@@ -18,7 +18,8 @@ BOOL DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved) {
 			|| !EnsureDirectory(REDLUA_CLIBS_DIR)) {
 				switch (MessageBox(NULL, "Failed to create RedLua "
 					"directory, please set write permissions "
-					"to the root folder of the game.", REDLUA_FULLNAME,
+					"to the root folder of the game then press "
+					"\"Continue\".", REDLUA_FULLNAME,
 					MB_ICONERROR | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
 				)) {
 					case IDCANCEL:

@@ -78,7 +78,7 @@ static int native_vector(lua_State *L) {
 #ifndef REDLUA_STANDALONE
 #	define WORLDGETALL(T, TN) { \
 		auto no = (NativeObject *)luaL_checkudata(L, 1, LUANATIVE_OBJECT); \
-		luaL_argcheck(L, no->hdr.type != T, 1, "not a" #TN " pool"); \
+		luaL_argcheck(L, no->hdr.type != T, 1, "not a " #TN " pool"); \
 		lua_pushinteger(L, worldGetAll##TN((int *)NATIVEOBJECT_GETPTR(no), no->hdr.count)); \
 		return 1; \
 	}

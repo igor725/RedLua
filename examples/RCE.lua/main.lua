@@ -253,11 +253,17 @@ function t.OnLoad()
 		end
 
 		local mime, data = ctx:getRequestBody()
-		if mime == 'text/x-lua' then
+		if mime == 'text/x-lua' and data ~= nil then
 			exec_env._BUF = ''
-			local succ, ret = pcall(load(data, 'api.execute', nil, exec_env))
-			ctx:setCode(succ and 200 or 500)
-			return succ and (ret ~= nil and (exec_env._BUF .. tostring(ret)) or exec_env._BUF) or ret
+			local chunk, err = load(data, 'api.execute', 't', exec_env)
+			if chunk ~= nil then
+				local succ, ret = pcall(chunk)
+				ctx:setCode(succ and 200 or 500)
+				return succ and (ret ~= nil and (exec_env._BUF .. tostring(ret)) or exec_env._BUF) or ret
+			end
+
+			ctx:setCode(500)
+			return tostring(err)
 		end
 
 		return ctx:setCode(415)
@@ -279,6 +285,7 @@ t.OnReload = t.OnStop
 if ... then
 	return t
 else
+	_STOP = false
 	package.path = '.\\Libs\\?.lua'
 	package.cpath = '.\\Libs\\C\\?.dll'
 	t.OnLoad()

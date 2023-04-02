@@ -3,7 +3,7 @@
 #include "scripthook.hpp"
 
 namespace NATIVES {
-#ifdef REDLUA_GTAV
+#if defined(REDLUA_GTAV)
 	static const char* CREATE_STRING(int flags, const char* textTemplate, const char *string) {(void)flags; (void)textTemplate; return string; }
 	static Hash GET_HASH_KEY(char* string) { return invoke<Hash>(0xD24D37CC275948CC, string); }
 	static void PLAY_SOUND_FRONTEND(char* audioName, char* audioRef, BOOL p3) { invoke<Void>(0x67C540AA08E4A6F5, -1, audioName, audioRef, p3); }
@@ -30,7 +30,7 @@ namespace NATIVES {
 		invoke<Void>(0x6C188BE134E074AA, message);
 		invoke<Void>(0x2ED7843F8F801023, true, true);
 	}
-#else
+#elif defined(REDLUA_RDR3)
 	template<typename... Args>
 	static const char* CREATE_STRING(int flags, const char* textTemplate, Args... args) { return invoke<char*>(0xFA925AC00EB830B9, flags, textTemplate, args...); }
 	static Hash GET_HASH_KEY(char* string) { return invoke<Hash>(0xFD340785ADF8CFB7, string); }

@@ -14,7 +14,7 @@ end
 function t.OnTick(buildMenu)
 	-- Menu builder MUST be here
 	if buildMenu then
-		menu.set{
+		menu.set {
 			title = 'My menu',
 			items = {
 				{
