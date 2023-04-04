@@ -2,3 +2,7 @@
 src/thirdparty/ScriptHook*/
 src/thirdparty/LuaJIT/
 objs/
+
+*.pdb
+*.asi
+*.ilk

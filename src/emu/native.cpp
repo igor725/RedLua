@@ -1,7 +1,7 @@
 #include "emu\native.hpp"
 #include "thirdparty\easyloggingpp.h"
 #include "thirdparty\keyboard.h"
-#include "vector"
+#include <vector>
 
 struct KeyEvent {
 	DWORD key;

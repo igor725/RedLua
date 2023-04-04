@@ -41,8 +41,8 @@ jobs:
 
       - name: Build plugin
         run: |
-          .\build.bat
-          .\build.bat gtav
+          .\build.bat nodebug
+          .\build.bat gtav nodebug
 
       - name: Build release archive
         shell: pwsh

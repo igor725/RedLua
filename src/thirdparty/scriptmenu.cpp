@@ -5,9 +5,8 @@
 */
 
 #include "scriptmenu.h"
-#undef DrawText // Windows.h
 
-void DrawText(float x, float y, char *str)
+void DrawString(float x, float y, char *str)
 {
 	NATIVES::DRAW_TEXT(NATIVES::CREATE_STRING(10, "LITERAL_STRING", str), x, y);
 }
@@ -45,7 +44,7 @@ void MenuItemBase::OnDraw(float lineTop, float lineLeft, bool active)
 	NATIVES::SET_TEXT_COLOR_RGBA(color.r, color.g, color.b, color.a);
 	NATIVES::SET_TEXT_CENTRE(0);
 	NATIVES::SET_TEXT_DROPSHADOW(0, 0, 0, 0, 0);
-	DrawText(lineLeft + m_textLeft, lineTop + m_lineHeight / 4.5f, const_cast<char *>(GetCaption().c_str()));
+	DrawString(lineLeft + m_textLeft, lineTop + m_lineHeight / 4.5f, const_cast<char *>(GetCaption().c_str()));
 	// rect
 	color = active ? m_colorRectActive : m_colorRect;
 	DrawRect(lineLeft, lineTop, m_lineWidth, m_lineHeight, color.r, color.g, color.b, color.a);
@@ -61,7 +60,7 @@ void MenuItemSwitchable::OnDraw(float lineTop, float lineLeft, bool active)
 	NATIVES::SET_TEXT_COLOR_RGBA(color.r, color.g, color.b, static_cast<int>(color.a / 1.1f));
 	NATIVES::SET_TEXT_CENTRE(0);
 	NATIVES::SET_TEXT_DROPSHADOW(0, 0, 0, 0, 0);
-	DrawText(lineLeft + lineWidth - lineWidth / 6.35f, lineTop + lineHeight / 4.8f, GetState() ? "[Y]" : "[N]");
+	DrawString(lineLeft + lineWidth - lineWidth / 6.35f, lineTop + lineHeight / 4.8f, GetState() ? "[Y]" : "[N]");
 }
 
 void MenuItemMenu::OnDraw(float lineTop, float lineLeft, bool active)
@@ -74,7 +73,7 @@ void MenuItemMenu::OnDraw(float lineTop, float lineLeft, bool active)
 	NATIVES::SET_TEXT_COLOR_RGBA(color.r, color.g, color.b, color.a / 2);
 	NATIVES::SET_TEXT_CENTRE(0);
 	NATIVES::SET_TEXT_DROPSHADOW(0, 0, 0, 0, 0);
-	DrawText(lineLeft + lineWidth - lineWidth / 8, lineTop + lineHeight / 3.5f, "*");
+	DrawString(lineLeft + lineWidth - lineWidth / 8, lineTop + lineHeight / 3.5f, "*");
 }
 
 void MenuItemMenu::OnSelect()
