@@ -3,7 +3,7 @@
 #define REDLUA_NAME "RedLua"
 #define REDLUA_VERSION_MAJOR 0
 #define REDLUA_VERSION_MINOR 6
-#define REDLUA_VERSION_PATCH 4
+#define REDLUA_VERSION_PATCH 5
 
 #define _VTSH(x) #x
 #define _VERTOSTR(MA, MI, PA) "v" _VTSH(MA) "." _VTSH(MI) "." _VTSH(PA)

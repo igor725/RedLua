@@ -67,7 +67,7 @@ static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allo
 			}
 			break;
 		case LUA_TSTRING:
-			if ((!param || param->type == NTYPE_CHAR && param->isPointer /*&&param->isConst*/))
+			if ((!param || param->type == NTYPE_CHAR && param->isPointer))
 				return (nativePush(lua_tostring(L, idx)), 1);
 			break;
 		case LUA_TUSERDATA:
@@ -188,10 +188,7 @@ static int global_index(lua_State *L) {
 		return 0;
 
 	auto nspace = Natives.GetNamespace(lua_tostring(L, 2));
-	if (nspace == nullptr) {
-		lua_pushnil(L);
-		return 1;
-	}
+	if (nspace == nullptr) return 0;
 
 	lua_rawgeti(L, LUA_REGISTRYINDEX, RedLua_NameSpace);
 	lua_rawgeti(L, -1, 1); // Вытаскиваем из таблицы неймспейса таблицу метода

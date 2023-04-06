@@ -46,12 +46,12 @@ typedef struct _NativeParam {
 	bool isPointer;
 } NativeParam;
 
-typedef std::map<int, NativeParam> NativeParams;
+typedef std::map<int, NativeParam> NativeParamMap;
 
 typedef struct _NativeMeth {
 	UINT64 hash;
 	NativeType returns;
-	NativeParams params;
+	NativeParamMap params;
 	unsigned long firstSeen;
 	bool isVararg;
 	bool isRetPtr;
