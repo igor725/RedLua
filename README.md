@@ -118,8 +118,9 @@ function t.OnTick()
 
 		UIFEED:_UI_FEED_POST_SAMPLE_TOAST(duration, data, true, true)
 	end
+
 	-- If you press F9 it will knock out all peds around you
-	if mish.iskeyjustup(VK_F9, true) then
+	if misc.iskeyjustup(VK_F9, true) then
 		local cnt = native.allpeds(t.ent_arr) - 1
 		for i = 0, cnt do
 			if t.ent_arr[i] ~= t.me_ent then

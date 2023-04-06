@@ -73,7 +73,8 @@ static int native_prepare_arg(lua_State *L, NativeParam *param, bool vector_allo
 		case LUA_TUSERDATA:
 			return native_prepare_nobj(L, param, vector_allowed, idx);
 		case 10/*LUA_TCDATA*/:
-			if (!param || (param->type == NTYPE_ANY && param->isPointer))
+		case LUA_TLIGHTUSERDATA:
+			if (!param || param->isPointer)
 				return (nativePush(lua_topointer(L, idx)), 1);
 			break;
 	}
