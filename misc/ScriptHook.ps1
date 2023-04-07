@@ -65,7 +65,7 @@ try {
 
 Foreach($elem in ($RESP).Links.Href) {
 	if ($elem.IndexOf("ScriptHook$($VARIANT)_SDK") -ige 0) {
-		$outFile = "$SCR_DIR/temp.zip";
+		$outFile = "$SCR_DIR/temp.zip"
 		Invoke-WebRequest -Uri ($DOMAIN + $elem) -OutFile $outFile -Headers $HEADERS
 		Add-Type -Assembly System.IO.Compression.FileSystem
 		$zip = [IO.Compression.ZipFile]::OpenRead($outFile)
