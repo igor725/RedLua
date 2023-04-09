@@ -5,6 +5,18 @@
 
 #define LUANATIVE_OBJECT "NativeObject"
 
+static NativeObject *push_uncached_lightptr
+(
+	lua_State *L,
+	NativeType type, NativeData *ptr,
+	uint count = NOBJCOUNT_UNKNOWN
+) {
+	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
+	NATIVEOBJECT_INIT(no, type, true, false, 1, ptr);
+	luaL_setmetatable(L, LUANATIVE_OBJECT);
+	return no;
+}
+
 static NativeObject *push_uncached_lightobjectcopy
 (
 	lua_State *L,
@@ -12,7 +24,7 @@ static NativeObject *push_uncached_lightobjectcopy
 	uint count = NOBJCOUNT_UNKNOWN
 ) {
 	auto no = (NativeObject *)lua_newuserdata(L, sizeof(NativeObject));
-	NATIVEOBJECT_INITLIGHT(no, type, false, count, *ptr); // TODO: Поддержка больших типов (н-р векторов)
+	NATIVEOBJECT_INITLIGHT(no, type, false, count, *ptr);
 	luaL_setmetatable(L, LUANATIVE_OBJECT);
 
 	return no;

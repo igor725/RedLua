@@ -55,9 +55,17 @@ static int native_new(lua_State *L) {
 	std::string stype = luaL_checkstring(L, 1);
 	auto type = get_type(stype);
 	luaL_argcheck(L, type != NTYPE_UNKNOWN, 1, "invalid type");
-	NativeData *ptr = nullptr;
-	if (lua_type(L, 3) == 10/*LUA_TCDATA*/)
-		ptr = (NativeData *)lua_topointer(L, 3);
+	NativeData *ptr;
+	switch (lua_type(L, 3)) {
+		case 10/*LUA_TCDATA*/:
+		case LUA_TLIGHTUSERDATA:
+			ptr = (NativeData *)lua_topointer(L, 3);
+			break;
+
+		default:
+			ptr = nullptr;
+			break;
+	}
 
 	push_uncached_fullcopy(L, type, ptr, (uint)count);
 	return 1;
@@ -95,7 +103,7 @@ static int native_allpick(lua_State *L) WORLDGETALL(NTYPE_PICKUP, Pickups)
 static int native_allvehs(lua_State *L) WORLDGETALL(NTYPE_VEHICLE, Vehicles)
 
 static int native_globalptr(lua_State *L) {
-	lua_pushlightuserdata(L, getGlobalPtr((int)luaL_checkinteger(L, 1)));
+	push_uncached_lightptr(L, NTYPE_INT, getGlobalPtr((int)luaL_checkinteger(L, 1)));
 	return 1;
 }
 
@@ -112,7 +120,7 @@ static int native_scrbase(lua_State *L) {
 			break;
 	}
 
-	lua_pushlightuserdata(L, getScriptHandleBaseAddress(handle));
+	push_uncached_lightptr(L, NTYPE_INT, (NativeData *)getScriptHandleBaseAddress(handle));
 	return 1;
 }
 

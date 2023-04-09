@@ -110,7 +110,7 @@ typedef struct _NativeVector {
 
 #define NATIVEOBJECT_INIT(X, T, P, R, C, D) (X)->hdr.type = (T), \
 	(X)->hdr.isPointer = (P), (X)->hdr.isReadOnly = (R), \
-	(X)->hdr.count = (C), (X)->content.nd = (D), \
+	(X)->hdr.count = (C), (X)->content.nd = (NativeData)(D), \
 	(X)->hdr.ownCache = 0
 
 #define NATIVEOBJECT_INITLIGHT(X, T, R, C, D) (X)->hdr.type = (T), \
